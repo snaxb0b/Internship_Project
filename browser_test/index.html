@@ -1,0 +1,192 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+    <title>YOLO API Browser Test</title>
+  </head>
+
+  <body>
+    <h1>YOLO API Browser Test</h1>
+
+    <section>
+      <h2>1. Available models</h2>
+
+      <button id="load-models-button">Load models</button>
+
+      <pre id="models-result">
+            No models loaded
+        </pre
+      >
+    </section>
+
+    <hr />
+
+    <section>
+      <h2>2. Upload image</h2>
+
+      <label for="model-select"> Select model: </label>
+
+      <select id="model-select">
+        <option value="">Load models first</option>
+      </select>
+
+      <br /><br />
+
+      <label for="confidence-input"> Confidence: </label>
+
+      <input
+        id="confidence-input"
+        type="number"
+        min="0"
+        max="1"
+        step="0.05"
+        value="0.25"
+      />
+
+      <br /><br />
+
+      <input id="image-input" type="file" accept="image/*" />
+
+      <br /><br />
+
+      <button id="predict-button">Upload and Predict</button>
+
+      <p id="status-message"></p>
+
+      <pre id="prediction-result">
+            No prediction result
+        </pre
+      >
+
+      <img
+        id="result-image"
+        alt="Prediction result"
+        style="display: none; max-width: 700px; width: 100%"
+      />
+    </section>
+
+    <script>
+      const API_BASE_URL = "http://127.0.0.1:8000";
+
+      const loadModelsButton = document.getElementById("load-models-button");
+
+      const modelsResult = document.getElementById("models-result");
+
+      const modelSelect = document.getElementById("model-select");
+
+      const confidenceInput = document.getElementById("confidence-input");
+
+      const imageInput = document.getElementById("image-input");
+
+      const predictButton = document.getElementById("predict-button");
+
+      const statusMessage = document.getElementById("status-message");
+
+      const predictionResult = document.getElementById("prediction-result");
+
+      const resultImage = document.getElementById("result-image");
+
+      async function loadModels() {
+        modelsResult.textContent = "Loading models...";
+
+        try {
+          const response = await fetch(`${API_BASE_URL}/api/models`);
+
+          if (!response.ok) {
+            throw new Error(`HTTP ${response.status}`);
+          }
+
+          const data = await response.json();
+
+          modelsResult.textContent = JSON.stringify(data, null, 2);
+
+          modelSelect.innerHTML = "";
+
+          for (const model of data.models) {
+            const option = document.createElement("option");
+
+            option.value = model.id;
+
+            option.textContent = `${model.name} (${model.id})`;
+
+            modelSelect.appendChild(option);
+          }
+        } catch (error) {
+          console.error(error);
+
+          modelsResult.textContent = `Error: ${error.message}`;
+        }
+      }
+
+      async function predictImage() {
+        const modelId = modelSelect.value;
+
+        const confidence = confidenceInput.value;
+
+        const selectedFile = imageInput.files[0];
+
+        if (!modelId) {
+          statusMessage.textContent = "Please select a model";
+
+          return;
+        }
+
+        if (!selectedFile) {
+          statusMessage.textContent = "Please select an image";
+
+          return;
+        }
+
+        const formData = new FormData();
+
+        formData.append("model_id", modelId);
+
+        formData.append("confidence", confidence);
+
+        formData.append("file", selectedFile);
+
+        statusMessage.textContent = "Predicting...";
+
+        predictionResult.textContent = "Waiting for response...";
+
+        resultImage.style.display = "none";
+
+        try {
+          const response = await fetch(`${API_BASE_URL}/api/predict`, {
+            method: "POST",
+            body: formData,
+          });
+
+          const data = await response.json();
+
+          if (!response.ok) {
+            throw new Error(JSON.stringify(data));
+          }
+
+          predictionResult.textContent = JSON.stringify(data, null, 2);
+
+          statusMessage.textContent = "Prediction completed";
+
+          if (data.result_image_url) {
+            resultImage.src = data.result_image_url;
+
+            resultImage.style.display = "block";
+          }
+        } catch (error) {
+          console.error(error);
+
+          statusMessage.textContent = "Prediction failed";
+
+          predictionResult.textContent = `Error: ${error.message}`;
+        }
+      }
+
+      loadModelsButton.addEventListener("click", loadModels);
+
+      predictButton.addEventListener("click", predictImage);
+    </script>
+  </body>
+</html>

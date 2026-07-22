@@ -1,0 +1,58 @@
+# -------------------------
+# Python
+# -------------------------
+.venv/
+venv/
+env/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.coverage
+htmlcov/
+
+# -------------------------
+# Environment variables
+# -------------------------
+.env
+.env.*
+!.env.example
+
+# -------------------------
+# Frontend
+# -------------------------
+frontend/node_modules/
+frontend/dist/
+
+# -------------------------
+# Generated results
+# -------------------------
+results/
+runs/
+
+# -------------------------
+# YOLO model files
+# -------------------------
+weights/*.pt
+weights/*.onnx
+*.engine
+
+# -------------------------
+# Browser test outputs
+# -------------------------
+browser_test/test-results/
+browser_test/playwright-report/
+browser_test/screenshots/
+browser_test/videos/
+
+# -------------------------
+# IDE
+# -------------------------
+.vscode/
+.idea/
+
+# -------------------------
+# Operating system
+# -------------------------
+.DS_Store
+Thumbs.db
+desktop.ini
