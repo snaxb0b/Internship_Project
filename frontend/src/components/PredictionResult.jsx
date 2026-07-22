@@ -18,6 +18,7 @@ function PredictionResult({
 }) {
   const [classQuery, setClassQuery] = useState("");
   const [sortBy, setSortBy] = useState("confidence-desc");
+  const [imageStatus, setImageStatus] = useState("loading");
 
   const detections = useMemo(
     () => result?.detections ?? [],
@@ -136,7 +137,7 @@ function PredictionResult({
           <div>
             <strong>Analyzing your image...</strong>
             <p>
-              YOLO is finding objects and drawing
+              RT-DETR is finding objects and drawing
               the result. This should only take a moment.
             </p>
           </div>
@@ -247,10 +248,59 @@ function PredictionResult({
               </div>
 
               <div className="result-image-canvas">
-                <img
-                  src={result.result_image_url}
-                  alt="YOLO prediction result with object annotations"
-                />
+                {imageStatus === "error" ? (
+                  <div
+                    className="result-image-unavailable"
+                    role="status"
+                  >
+                    <Icon name="image" size={30} />
+                    <strong>Preview unavailable</strong>
+                    <p>
+                      The annotated image could not be loaded.
+                      It may have expired on the server.
+                    </p>
+                  </div>
+                ) : (
+                  <>
+                    {imageStatus === "loading" && (
+                      <span
+                        className="skeleton result-image-skeleton"
+                        aria-hidden="true"
+                      />
+                    )}
+
+                    <img
+                      src={result.result_image_url}
+                      alt="RT-DETR prediction result with object annotations"
+                      className={
+                        imageStatus === "loaded"
+                          ? "result-image-media is-loaded"
+                          : "result-image-media"
+                      }
+                      ref={(node) => {
+                        /*
+                         * รูปที่ cache ไว้อาจ load
+                         * เสร็จก่อน onLoad จะผูก
+                         * จึงเช็ค complete ตรงนี้ด้วย
+                         */
+                        if (
+                          node &&
+                          node.complete &&
+                          node.naturalWidth > 0 &&
+                          imageStatus === "loading"
+                        ) {
+                          setImageStatus("loaded");
+                        }
+                      }}
+                      onLoad={() =>
+                        setImageStatus("loaded")
+                      }
+                      onError={() =>
+                        setImageStatus("error")
+                      }
+                    />
+                  </>
+                )}
               </div>
             </div>
           )}

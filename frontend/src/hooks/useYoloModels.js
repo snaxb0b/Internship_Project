@@ -1,5 +1,6 @@
 import {
   useEffect,
+  useRef,
   useState,
 } from "react";
 
@@ -20,6 +21,14 @@ export function useYoloModels() {
 
   const [reloadKey, setReloadKey] =
     useState(0);
+
+  const needsReloadRef = useRef(false);
+
+  useEffect(() => {
+    needsReloadRef.current =
+      Boolean(error) ||
+      models.length === 0;
+  }, [error, models]);
 
 
   useEffect(() => {
@@ -65,6 +74,53 @@ export function useYoloModels() {
       controller.abort();
     };
   }, [reloadKey]);
+
+
+  /*
+   * โหลดรายชื่อโมเดลใหม่อัตโนมัติ
+   * เมื่อเน็ตกลับมา/กลับมาที่แท็บ
+   * เฉพาะกรณีที่ยังโหลดไม่สำเร็จ
+   */
+  useEffect(() => {
+    function reloadIfNeeded() {
+      if (needsReloadRef.current) {
+        setReloadKey(
+          (currentKey) => currentKey + 1
+        );
+      }
+    }
+
+    function handleVisibility() {
+      if (
+        document.visibilityState ===
+        "visible"
+      ) {
+        reloadIfNeeded();
+      }
+    }
+
+    window.addEventListener(
+      "online",
+      reloadIfNeeded
+    );
+
+    document.addEventListener(
+      "visibilitychange",
+      handleVisibility
+    );
+
+    return () => {
+      window.removeEventListener(
+        "online",
+        reloadIfNeeded
+      );
+
+      document.removeEventListener(
+        "visibilitychange",
+        handleVisibility
+      );
+    };
+  }, []);
 
 
   function reloadModels() {

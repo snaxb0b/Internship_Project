@@ -10,7 +10,7 @@ def test_root_endpoint(
 
     assert response.json() == {
         "message": (
-            "YOLO Image Prediction API "
+            "RT-DETR Image Prediction API "
             "is running"
         )
     }
@@ -46,11 +46,8 @@ def test_models_endpoint(
     assert isinstance(models, list)
 
     expected_model_ids = {
-        "yolo26n",
-        "yolo26s",
-        "yolo26m",
-        "yolo26l",
-        "yolo26x",
+        "rtdetr-l",
+        "rtdetr-x",
     }
 
     model_ids = {
@@ -62,7 +59,7 @@ def test_models_endpoint(
         expected_model_ids
     )
 
-    assert len(models) == 5
+    assert len(models) == 2
 
     for model in models:
         assert isinstance(

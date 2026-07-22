@@ -1,19 +1,19 @@
 # Model Weights
 
-Place the YOLO model files in this directory before running the backend.
+Place the RT-DETR model files in this directory before running the backend.
 
-Required files may include:
+Required files:
 
-- yolo26n.pt
-- yolo26s.pt
-- yolo26m.pt
-- yolo26l.pt
-- yolo26x.pt
+- rtdetr-l.pt
+- rtdetr-x.pt
 
 Example paths:
 
-weights/yolo26n.pt
-weights/yolo26s.pt
+weights/rtdetr-l.pt
+weights/rtdetr-x.pt
+
+The weights are downloaded automatically by Ultralytics from the official
+release assets (e.g. `https://github.com/ultralytics/assets/releases`) the
+first time a model is used, or you can place them here manually.
 
 The model files are not stored in Git because they are large binary files.
-Contact the project owner to obtain them.

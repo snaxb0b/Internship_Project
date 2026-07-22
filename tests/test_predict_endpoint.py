@@ -65,9 +65,11 @@ def test_predict_success(
         model_id: str,
         image_bytes: bytes,
         confidence: float,
+        use_sahi: bool = False,
     ) -> dict[str, Any]:
-        assert model_id == "yolo26n"
+        assert model_id == "rtdetr-l"
         assert confidence == 0.25
+        assert use_sahi is False
         assert len(image_bytes) > 0
 
         return create_fake_prediction_result(
@@ -84,7 +86,7 @@ def test_predict_success(
     response = client.post(
         "/api/predict",
         data={
-            "model_id": "yolo26n",
+            "model_id": "rtdetr-l",
             "confidence": "0.25",
         },
         files={
@@ -121,7 +123,7 @@ def test_predict_success(
 
     assert (
         response_data["model_id"]
-        == "yolo26n"
+        == "rtdetr-l"
     )
 
     assert (
@@ -188,7 +190,7 @@ def test_predict_confidence_above_one(
     response = client.post(
         "/api/predict",
         data={
-            "model_id": "yolo26n",
+            "model_id": "rtdetr-l",
             "confidence": "1.5",
         },
         files={
@@ -217,7 +219,7 @@ def test_predict_confidence_below_zero(
     response = client.post(
         "/api/predict",
         data={
-            "model_id": "yolo26n",
+            "model_id": "rtdetr-l",
             "confidence": "-0.1",
         },
         files={
@@ -245,7 +247,7 @@ def test_predict_unsupported_content_type(
     response = client.post(
         "/api/predict",
         data={
-            "model_id": "yolo26n",
+            "model_id": "rtdetr-l",
             "confidence": "0.25",
         },
         files={
@@ -278,7 +280,7 @@ def test_predict_fake_jpeg(
     response = client.post(
         "/api/predict",
         data={
-            "model_id": "yolo26n",
+            "model_id": "rtdetr-l",
             "confidence": "0.25",
         },
         files={
@@ -306,7 +308,7 @@ def test_predict_empty_upload(
     response = client.post(
         "/api/predict",
         data={
-            "model_id": "yolo26n",
+            "model_id": "rtdetr-l",
             "confidence": "0.25",
         },
         files={
@@ -346,7 +348,7 @@ def test_predict_file_above_upload_limit(
     response = client.post(
         "/api/predict",
         data={
-            "model_id": "yolo26n",
+            "model_id": "rtdetr-l",
             "confidence": "0.25",
         },
         files={
@@ -389,7 +391,7 @@ def test_predict_request_above_body_limit(
     response = client.post(
         "/api/predict",
         data={
-            "model_id": "yolo26n",
+            "model_id": "rtdetr-l",
             "confidence": "0.25",
         },
         files={
@@ -417,7 +419,7 @@ def test_predict_missing_file(
     response = client.post(
         "/api/predict",
         data={
-            "model_id": "yolo26n",
+            "model_id": "rtdetr-l",
             "confidence": "0.25",
         },
     )
@@ -431,3 +433,92 @@ def test_predict_missing_file(
         response_data["detail"],
         list,
     )
+
+def test_predict_success_with_sahi(
+    client: TestClient,
+    sample_png_bytes: bytes,
+    monkeypatch,
+) -> None:
+    """ส่ง use_sahi=true แล้ว flag ต้องถูกส่งต่อไปยัง predict_image."""
+
+    def fake_predict_image(
+        *,
+        model_id: str,
+        image_bytes: bytes,
+        confidence: float,
+        use_sahi: bool = False,
+    ) -> dict[str, Any]:
+        assert use_sahi is True
+
+        result = create_fake_prediction_result(
+            model_id=model_id,
+            confidence=confidence,
+        )
+        result["used_sahi"] = True
+        return result
+
+    monkeypatch.setattr(
+        inference_route,
+        "predict_image",
+        fake_predict_image,
+    )
+
+    response = client.post(
+        "/api/predict",
+        data={
+            "model_id": "rtdetr-l",
+            "confidence": "0.25",
+            "use_sahi": "true",
+        },
+        files={
+            "file": (
+                "sample.png",
+                sample_png_bytes,
+                "image/png",
+            )
+        },
+    )
+
+    assert response.status_code == 200
+    assert response.json()["used_sahi"] is True
+
+
+def test_predict_sahi_unavailable(
+    client: TestClient,
+    sample_png_bytes: bytes,
+    monkeypatch,
+) -> None:
+    """ถ้า SAHI ใช้ไม่ได้ ต้องได้ 503 พร้อมข้อความชัดเจน."""
+    from services.yolo_service import (
+        SahiUnavailableError,
+    )
+
+    def fake_predict_image(**_kwargs):
+        raise SahiUnavailableError(
+            "SAHI is not installed"
+        )
+
+    monkeypatch.setattr(
+        inference_route,
+        "predict_image",
+        fake_predict_image,
+    )
+
+    response = client.post(
+        "/api/predict",
+        data={
+            "model_id": "rtdetr-l",
+            "confidence": "0.25",
+            "use_sahi": "true",
+        },
+        files={
+            "file": (
+                "sample.png",
+                sample_png_bytes,
+                "image/png",
+            )
+        },
+    )
+
+    assert response.status_code == 503
+    assert "SAHI" in response.json()["detail"]

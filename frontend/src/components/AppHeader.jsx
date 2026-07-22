@@ -295,7 +295,7 @@ function AppHeader({
             </h1>
 
             <p className="header-description">
-              Upload an image, choose a YOLO model,
+              Upload an image, choose an RT-DETR model,
               and turn every detection into a clear,
               visual result in just a few steps.
             </p>

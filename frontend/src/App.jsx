@@ -1,8 +1,10 @@
-import { useState } from "react";
+import { useRef, useState } from "react";
 
 import {
   predictUploadedImage,
 } from "./api/yoloApi";
+
+import { useToast } from "./context/toastContext";
 
 import AppHeader from "./components/AppHeader";
 import PredictionForm from "./components/PredictionForm";
@@ -35,6 +37,9 @@ import {
 import "./App.css";
 
 
+const PREDICTION_TIMEOUT_MS = 120000;
+
+
 function scrollToResultPanel() {
   window.requestAnimationFrame(() => {
     const prefersReducedMotion =
@@ -55,6 +60,11 @@ function scrollToResultPanel() {
 
 
 function App() {
+  const showToast = useToast();
+
+  const predictionAbortRef =
+    useRef(null);
+
   const {
     status: apiStatus,
     error: apiError,
@@ -81,6 +91,9 @@ function App() {
 
   const [confidence, setConfidence] =
     useState("0.25");
+
+  const [sahiEnabled, setSahiEnabled] =
+    useState(false);
 
   const [selectedFile, setSelectedFile] =
     useState(null);
@@ -254,12 +267,26 @@ function App() {
     setPredictionResult(null);
     setSelectedHistoryId("");
 
+    const controller = new AbortController();
+    predictionAbortRef.current = controller;
+
+    let timedOut = false;
+    const timeoutId = window.setTimeout(
+      () => {
+        timedOut = true;
+        controller.abort();
+      },
+      PREDICTION_TIMEOUT_MS
+    );
+
     try {
       const result =
         await predictUploadedImage({
           modelId: resolvedModelId,
           confidence: Number(confidence),
           file: selectedFile,
+          useSahi: sahiEnabled,
+          signal: controller.signal,
         });
 
       setPredictionResult(result);
@@ -283,14 +310,58 @@ function App() {
       setSelectedHistoryId(
         newHistoryItem.id
       );
+
+      showToast({
+        type: "success",
+        message: `Prediction complete — ${
+          result.object_count
+        } object${
+          result.object_count === 1
+            ? ""
+            : "s"
+        } detected.`,
+      });
     } catch (error) {
-      setPredictionError(
-        error.message ||
-          "Prediction request failed"
-      );
+      if (error.name === "AbortError") {
+        if (timedOut) {
+          const timeoutMessage =
+            "The prediction timed out. Please try again.";
+
+          setPredictionError(
+            timeoutMessage
+          );
+
+          showToast({
+            type: "error",
+            message: timeoutMessage,
+          });
+        }
+        /*
+         * ผู้ใช้กด Cancel เอง
+         * ไม่ต้องแสดง error
+         */
+      } else {
+        const message =
+          error.message ||
+          "Prediction request failed";
+
+        setPredictionError(message);
+
+        showToast({
+          type: "error",
+          message,
+        });
+      }
     } finally {
+      window.clearTimeout(timeoutId);
+      predictionAbortRef.current = null;
       setPredicting(false);
     }
+  }
+
+
+  function handleCancelPrediction() {
+    predictionAbortRef.current?.abort();
   }
 
 
@@ -324,6 +395,11 @@ function App() {
       setSelectedHistoryId("");
       setPredictionResult(null);
     }
+
+    showToast({
+      type: "info",
+      message: "Prediction removed from history.",
+    });
   }
 
 
@@ -331,6 +407,11 @@ function App() {
     clearHistory();
     setSelectedHistoryId("");
     setPredictionResult(null);
+
+    showToast({
+      type: "info",
+      message: "Prediction history cleared.",
+    });
   }
 
 
@@ -361,6 +442,9 @@ function App() {
             handleConfidenceChange
           }
 
+          sahiEnabled={sahiEnabled}
+          onSahiChange={setSahiEnabled}
+
           selectedFile={selectedFile}
           onFileChange={
             handleFileChange
@@ -377,6 +461,7 @@ function App() {
 
           onSubmit={handlePrediction}
           onReset={handleReset}
+          onCancel={handleCancelPrediction}
         />
 
         <div className="workflow-output">

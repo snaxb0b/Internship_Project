@@ -24,13 +24,14 @@ from services.upload_validation import (
 from services.yolo_service import (
     InvalidImageError,
     ModelLoadError,
+    SahiUnavailableError,
     predict_image,
 )
 
 
 router = APIRouter(
     prefix="/api",
-    tags=["YOLO Inference"],
+    tags=["RT-DETR Inference"],
 )
 
 
@@ -46,6 +47,7 @@ async def predict_uploaded_image(
     request: Request,
     model_id: str = Form(...),
     confidence: float = Form(0.25),
+    use_sahi: bool = Form(False),
     file: UploadFile = File(...),
 ) -> dict:
     model_id = model_id.strip()
@@ -124,7 +126,21 @@ async def predict_uploaded_image(
             model_id=model_id,
             image_bytes=image_bytes,
             confidence=confidence,
+            use_sahi=use_sahi,
         )
+
+    except SahiUnavailableError as error:
+        raise HTTPException(
+            status_code=(
+                status
+                .HTTP_503_SERVICE_UNAVAILABLE
+            ),
+            detail=(
+                "SAHI mode is not available "
+                "on the server. "
+                f"{error}"
+            ),
+        ) from error
 
     except InvalidImageError as error:
         raise HTTPException(

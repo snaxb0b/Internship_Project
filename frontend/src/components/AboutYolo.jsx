@@ -7,16 +7,17 @@ import {
 import { createPortal } from "react-dom";
 
 import Icon from "./Icon";
+import { useTheme } from "../hooks/useTheme";
 
 
 const dialogTopics = {
   what: {
     eyebrow: "What it is",
-    title: "You Only Look Once",
+    title: "Real-Time Detection Transformer",
     description:
-      "YOLO is a family of real-time computer-vision models that can find and classify multiple objects in an image.",
+      "RT-DETR is a real-time, end-to-end object detector built on a Detection Transformer (DETR) architecture that finds and classifies multiple objects in an image.",
     details:
-      "The original approach evaluates the full image in one unified prediction, producing object classes, confidence scores and bounding boxes together.",
+      "It pairs an efficient hybrid encoder with IoU-aware query selection, so it predicts object classes, confidence scores and bounding boxes directly — without the non-maximum suppression step many detectors rely on.",
     facts: [
       {
         label: "Input",
@@ -28,35 +29,41 @@ const dialogTopics = {
       },
       {
         label: "Designed for",
-        value: "Real-time detection",
+        value: "Real-time, NMS-free",
       },
     ],
-    resourceLabel: "Explore Ultralytics Docs",
-    resourceHref: "https://docs.ultralytics.com/",
+    resourceLabel: "Explore RT-DETR Docs",
+    resourceHref: "https://docs.ultralytics.com/models/rtdetr/",
   },
   history: {
-    eyebrow: "A short history of YOLO",
+    eyebrow: "A short history of RT-DETR",
     title: "From research to practical tools",
     description:
-      "Joseph Redmon, Santosh Divvala, Ross Girshick and Ali Farhadi introduced YOLO in a paper submitted in 2015.",
+      "RT-DETR was introduced by Baidu researchers in a 2023 paper on real-time, end-to-end object detection.",
     details:
-      "Its unified approach helped make fast object detection practical and inspired an ecosystem of models and computer-vision workflows.",
+      "Its transformer-based design brought real-time speed to end-to-end detection, and it is now available as a ready-to-use model in the Ultralytics toolkit.",
     timeline: [
       {
-        year: "2015",
-        title: "The original YOLO paper",
+        year: "2020",
+        title: "The original DETR",
         description:
-          "Object detection was reframed as one end-to-end regression problem.",
+          "Object detection was reframed as a direct set-prediction problem using transformers.",
+      },
+      {
+        year: "2023",
+        title: "The RT-DETR paper",
+        description:
+          "Baidu showed a Detection Transformer could match earlier real-time detectors at real-time speed.",
       },
       {
         year: "Today",
         title: "A practical open toolkit",
         description:
-          "Ultralytics supports prediction, training, validation and export workflows.",
+          "Ultralytics supports RT-DETR for prediction, training, validation and export.",
       },
     ],
-    resourceLabel: "Read the original YOLO paper",
-    resourceHref: "https://arxiv.org/abs/1506.02640",
+    resourceLabel: "Read the RT-DETR paper",
+    resourceHref: "https://arxiv.org/abs/2304.08069",
   },
 };
 
@@ -319,6 +326,10 @@ function YoloBottomBar() {
 
   const activeTriggerRef = useRef(null);
 
+  const { theme, toggleTheme } = useTheme();
+
+  const isDark = theme === "dark";
+
 
   function openTopic(topic, event) {
     activeTriggerRef.current =
@@ -349,13 +360,13 @@ function YoloBottomBar() {
           className="sr-only"
           id="yolo-bottom-bar-title"
         >
-          YOLO quick access
+          RT-DETR quick access
         </h2>
 
         <div
           className="yolo-bottom-bar"
           role="group"
-          aria-label="YOLO information and resources"
+          aria-label="RT-DETR information and resources"
         >
           <button
             className={[
@@ -374,7 +385,7 @@ function YoloBottomBar() {
             aria-haspopup="dialog"
             aria-expanded={activeTopic === "what"}
             aria-controls="yolo-info-dialog"
-            aria-label="About YOLO"
+            aria-label="About RT-DETR"
           >
             <span className="yolo-bar-icon">
               <BrandMark
@@ -401,10 +412,33 @@ function YoloBottomBar() {
             aria-haspopup="dialog"
             aria-expanded={activeTopic === "history"}
             aria-controls="yolo-info-dialog"
-            aria-label="View YOLO history"
+            aria-label="View RT-DETR history"
           >
             <span className="yolo-bar-icon">
               <Icon name="history" size={21} />
+            </span>
+          </button>
+
+          <button
+            className="yolo-bar-item yolo-bar-item--theme"
+            type="button"
+            onClick={toggleTheme}
+            aria-label={
+              isDark
+                ? "Switch to light mode"
+                : "Switch to dark mode"
+            }
+            title={
+              isDark
+                ? "Light mode"
+                : "Dark mode"
+            }
+          >
+            <span className="yolo-bar-icon">
+              <Icon
+                name={isDark ? "moon" : "sun"}
+                size={20}
+              />
             </span>
           </button>
 
@@ -413,7 +447,7 @@ function YoloBottomBar() {
             href="https://github.com/ultralytics/ultralytics"
             target="_blank"
             rel="noopener noreferrer"
-            aria-label="Open Ultralytics YOLO on GitHub in a new tab"
+            aria-label="Open the Ultralytics RT-DETR repository on GitHub in a new tab"
           >
             <span className="yolo-bar-icon">
               <BrandMark

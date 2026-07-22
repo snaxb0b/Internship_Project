@@ -38,9 +38,9 @@ ALLOWED_ORIGINS = [
 
 
 app = FastAPI(
-    title="YOLO Image Prediction API",
+    title="RT-DETR Image Prediction API",
     description=(
-        "Upload an image, select a YOLO model, "
+        "Upload an image, select an RT-DETR model, "
         "and receive object detection results."
     ),
     version="1.0.0",
@@ -92,7 +92,7 @@ app.include_router(
 def root() -> dict[str, str]:
     return {
         "message": (
-            "YOLO Image Prediction API "
+            "RT-DETR Image Prediction API "
             "is running"
         )
     }

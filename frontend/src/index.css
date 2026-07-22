@@ -8,12 +8,72 @@
     BlinkMacSystemFont,
     "Segoe UI",
     sans-serif;
-  color: #102a43;
-  background: #f4f9ff;
+
+  /*
+   * Theme tokens live on :root so they are also
+   * available to elements rendered in a portal on
+   * <body> (dialogs, toasts) — not only inside .app-shell.
+   */
+  --blue: #1677ff;
+  --blue-dark: #0b5ed7;
+  --blue-deep: #0b3b6f;
+  --blue-soft: #eaf4ff;
+  --blue-pale: #f6fbff;
+  --navy: #0b2a4a;
+  --text: #183b56;
+  --muted: #58708a;
+  --line: #cfe3f7;
+  --line-soft: #e3effa;
+  --surface: #ffffff;
+  --surface-soft: #f7fbff;
+  --surface-tint: #f2f8fe;
+  --surface-glass: rgba(255, 255, 255, 0.9);
+  --success: #16855b;
+  --success-soft: #eaf8f2;
+  --danger: #c2415a;
+  --danger-soft: #fff1f3;
+  --on-accent: #ffffff;
+  --bg: #f4f9ff;
+  --bg-glow-1: rgba(94, 176, 255, 0.12);
+  --bg-glow-2: rgba(41, 121, 255, 0.08);
+  --selection-bg: #cfe8ff;
+  --selection-text: #0b3b6f;
+
+  color-scheme: light;
+  color: var(--text);
+  background: var(--bg);
   font-synthesis: none;
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+}
+
+:root[data-theme="dark"] {
+  --blue: #4f9dff;
+  --blue-dark: #8fc0ff;
+  --blue-deep: #cbe0ff;
+  --blue-soft: #1b2c4d;
+  --blue-pale: #172540;
+  --navy: #eef4fb;
+  --text: #d8e4f2;
+  --muted: #9fb2cc;
+  --line: #2c3d5d;
+  --line-soft: #243652;
+  --surface: #16213a;
+  --surface-soft: #1b2842;
+  --surface-tint: #1f2e4e;
+  --surface-glass: rgba(20, 30, 52, 0.82);
+  --success: #4cc38a;
+  --success-soft: #163021;
+  --danger: #ff7088;
+  --danger-soft: #3a1622;
+  --bg: #0d1424;
+  --bg-glow-1: rgba(51, 110, 190, 0.16);
+  --bg-glow-2: rgba(37, 84, 170, 0.12);
+  --selection-bg: #1f3a63;
+  --selection-text: #dbebff;
+
+  color-scheme: dark;
 }
 
 * {
@@ -32,16 +92,16 @@ body {
   background:
     radial-gradient(
       circle at 8% 18%,
-      rgba(94, 176, 255, 0.12),
+      var(--bg-glow-1),
       transparent 26rem
     ),
     radial-gradient(
       circle at 92% 55%,
-      rgba(41, 121, 255, 0.08),
+      var(--bg-glow-2),
       transparent 30rem
     ),
-    #f4f9ff;
-  color: #102a43;
+    var(--bg);
+  color: var(--text);
 }
 
 button,
@@ -72,8 +132,8 @@ a {
 }
 
 ::selection {
-  background: #cfe8ff;
-  color: #0b3b6f;
+  background: var(--selection-bg);
+  color: var(--selection-text);
 }
 
 :focus-visible {

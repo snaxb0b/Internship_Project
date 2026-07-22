@@ -52,6 +52,25 @@ function formatFileSize(sizeInBytes) {
 }
 
 
+function HistoryThumbnail({ url }) {
+  const [hasFailed, setHasFailed] =
+    useState(false);
+
+  if (!url || hasFailed) {
+    return <Icon name="image" size={24} />;
+  }
+
+  return (
+    <img
+      src={url}
+      alt=""
+      loading="lazy"
+      onError={() => setHasFailed(true)}
+    />
+  );
+}
+
+
 function PredictionHistory({
   items,
   selectedId,
@@ -172,15 +191,9 @@ function PredictionHistory({
                   .join(" ")}
               >
                 <div className="history-thumbnail">
-                  {item.result?.result_image_url ? (
-                    <img
-                      src={item.result.result_image_url}
-                      alt=""
-                      loading="lazy"
-                    />
-                  ) : (
-                    <Icon name="image" size={24} />
-                  )}
+                  <HistoryThumbnail
+                    url={item.result?.result_image_url}
+                  />
 
                   {isSelected && (
                     <span className="history-selected-mark">

@@ -2,12 +2,37 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
+    <script>
+      /* Apply saved (or system) theme before first paint to avoid a flash. */
+      (function () {
+        try {
+          var stored = localStorage.getItem("theme");
+          var prefersDark =
+            window.matchMedia &&
+            window.matchMedia("(prefers-color-scheme: dark)").matches;
+          var theme =
+            stored === "light" || stored === "dark"
+              ? stored
+              : prefersDark
+                ? "dark"
+                : "light";
+          document.documentElement.setAttribute("data-theme", theme);
+        } catch (e) {
+          document.documentElement.setAttribute("data-theme", "light");
+        }
+      })();
+    </script>
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <meta
       name="viewport"
       content="width=device-width, initial-scale=1.0, viewport-fit=cover"
     />
-    <title>frontend</title>
+    <title>Object Detection — AI Inspection</title>
+    <meta
+      name="description"
+      content="Upload an image, choose an RT-DETR model, and turn every detection into a clear, visual result."
+    />
+    <meta name="theme-color" content="#1677ff" />
   </head>
   <body>
     <div id="root"></div>

@@ -85,6 +85,8 @@ export async function predictUploadedImage({
   modelId,
   confidence,
   file,
+  useSahi = false,
+  signal,
 }) {
   const formData = new FormData();
 
@@ -93,6 +95,10 @@ export async function predictUploadedImage({
     "confidence",
     String(confidence)
   );
+  formData.append(
+    "use_sahi",
+    String(useSahi)
+  );
   formData.append("file", file);
 
   const response = await fetch(
@@ -100,6 +106,7 @@ export async function predictUploadedImage({
     {
       method: "POST",
       body: formData,
+      signal,
     }
   );
 

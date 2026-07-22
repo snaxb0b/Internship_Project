@@ -8,9 +8,11 @@ import numpy as np
 import torch
 from PIL import (
     Image,
+    ImageDraw,
+    ImageFont,
     UnidentifiedImageError,
 )
-from ultralytics import YOLO
+from ultralytics import RTDETR
 
 from config.model_registry import (
     get_model_config,
@@ -33,15 +35,42 @@ RESULTS_DIR.mkdir(
 )
 
 
-_MODEL_CACHE: dict[str, YOLO] = {}
+_MODEL_CACHE: dict[str, RTDETR] = {}
+
+# Cache สำหรับ SAHI detection model (แยกจาก RTDETR ปกติ)
+_SAHI_MODEL_CACHE: dict[str, Any] = {}
+
+
+# โหลด SAHI แบบ optional เพื่อให้ระบบยังทำงานได้
+# แม้เครื่องยังไม่ได้ติดตั้ง sahi
+try:
+    from sahi import AutoDetectionModel
+    from sahi.predict import get_sliced_prediction
+
+    _SAHI_AVAILABLE = True
+    _SAHI_IMPORT_ERROR = ""
+except Exception as _sahi_import_error:  # pragma: no cover
+    AutoDetectionModel = None
+    get_sliced_prediction = None
+    _SAHI_AVAILABLE = False
+    _SAHI_IMPORT_ERROR = str(_sahi_import_error)
+
+
+# ค่าพารามิเตอร์การแบ่งภาพของ SAHI
+SAHI_SLICE_SIZE = 512
+SAHI_OVERLAP_RATIO = 0.2
 
 
 class ModelLoadError(RuntimeError):
-    """เกิดขึ้นเมื่อโหลด YOLO model ไม่สำเร็จ."""
+    """เกิดขึ้นเมื่อโหลด RT-DETR model ไม่สำเร็จ."""
 
 
 class InvalidImageError(ValueError):
     """เกิดขึ้นเมื่อข้อมูลไม่ใช่รูปที่ระบบรองรับ."""
+
+
+class SahiUnavailableError(RuntimeError):
+    """เกิดขึ้นเมื่อร้องขอ SAHI แต่ระบบใช้ SAHI ไม่ได้."""
 
 
 def get_device() -> int | str:
@@ -51,7 +80,7 @@ def get_device() -> int | str:
     return "cpu"
 
 
-def load_model(model_id: str) -> YOLO:
+def load_model(model_id: str) -> RTDETR:
     if model_id in _MODEL_CACHE:
         print(
             f"[CACHE] Using loaded model: "
@@ -85,7 +114,7 @@ def load_model(model_id: str) -> YOLO:
     )
 
     try:
-        model = YOLO(
+        model = RTDETR(
             str(weight_path)
         )
 
@@ -208,15 +237,186 @@ def decode_image(
     return image_array
 
 
+# ชุดสีสำหรับกล่อง/ป้ายกำกับแต่ละคลาส (RGB)
+_BOX_PALETTE: tuple[tuple[int, int, int], ...] = (
+    (37, 136, 255),
+    (22, 133, 91),
+    (222, 90, 130),
+    (245, 158, 11),
+    (139, 92, 246),
+    (14, 165, 183),
+    (234, 88, 12),
+    (99, 102, 241),
+    (16, 185, 129),
+    (219, 39, 119),
+    (59, 130, 246),
+    (168, 85, 247),
+)
+
+
+def _load_font(
+    size: int,
+) -> ImageFont.ImageFont:
+    """
+    โหลดฟอนต์ TrueType สำหรับป้ายกำกับ
+
+    ลองหลายชื่อ/พาธเพื่อรองรับหลาย OS
+    ถ้าหาไม่เจอจะใช้ฟอนต์เริ่มต้นของ PIL
+    """
+    for candidate in (
+        "arial.ttf",
+        "DejaVuSans.ttf",
+        "C:/Windows/Fonts/arial.ttf",
+    ):
+        try:
+            return ImageFont.truetype(
+                candidate,
+                size,
+            )
+
+        except OSError:
+            continue
+
+    return ImageFont.load_default()
+
+
+def render_annotated_image(
+    *,
+    image_array: np.ndarray,
+    detections: list[dict[str, Any]],
+) -> Image.Image:
+    """
+    วาดกล่อง/คลาส/ค่าความมั่นใจ ทับลงบน
+    ภาพต้นฉบับโดยตรง
+
+    ภาพผลลัพธ์จึงมีความละเอียดและสีตรงกับ
+    ภาพต้นฉบับทุกประการ (RGB, ไม่ย่อ/ขยาย/
+    ครอป/สลับ channel) มีเพียงกล่องและป้าย
+    กำกับที่ถูกวาดเพิ่มเท่านั้น
+    """
+    image = Image.fromarray(
+        image_array,
+        mode="RGB",
+    )
+
+    draw = ImageDraw.Draw(image)
+
+    height, width = image_array.shape[:2]
+
+    line_width = max(
+        2,
+        round(min(width, height) / 320),
+    )
+
+    font = _load_font(
+        max(13, round(min(width, height) / 45))
+    )
+
+    padding = max(2, line_width)
+
+    for detection in detections:
+        box = detection["bounding_box"]
+
+        x1 = float(box["x1"])
+        y1 = float(box["y1"])
+        x2 = float(box["x2"])
+        y2 = float(box["y2"])
+
+        color = _BOX_PALETTE[
+            detection["class_id"]
+            % len(_BOX_PALETTE)
+        ]
+
+        draw.rectangle(
+            (x1, y1, x2, y2),
+            outline=color,
+            width=line_width,
+        )
+
+        label = (
+            f"{detection['class_name']} "
+            f"{detection['confidence'] * 100:.0f}%"
+        )
+
+        text_box = draw.textbbox(
+            (0, 0),
+            label,
+            font=font,
+        )
+
+        text_width = text_box[2] - text_box[0]
+        text_height = text_box[3] - text_box[1]
+
+        label_height = (
+            text_height + 2 * padding
+        )
+
+        # วางป้ายไว้เหนือกล่อง ถ้าชนขอบบนให้ย้ายลงมาในกล่อง
+        label_top = y1 - label_height
+        label_bottom = y1
+
+        if label_top < 0:
+            label_top = y1
+            label_bottom = y1 + label_height
+
+        label_left = x1
+        label_right = (
+            x1 + text_width + 2 * padding
+        )
+
+        if label_right > width:
+            label_right = width
+            label_left = (
+                width
+                - (text_width + 2 * padding)
+            )
+
+        draw.rectangle(
+            (
+                label_left,
+                label_top,
+                label_right,
+                label_bottom,
+            ),
+            fill=color,
+        )
+
+        luminance = (
+            0.299 * color[0]
+            + 0.587 * color[1]
+            + 0.114 * color[2]
+        )
+
+        text_color = (
+            (17, 24, 39)
+            if luminance > 150
+            else (255, 255, 255)
+        )
+
+        draw.text(
+            (
+                label_left + padding,
+                label_top + padding
+                - text_box[1],
+            ),
+            label,
+            fill=text_color,
+            font=font,
+        )
+
+    return image
+
+
 def save_annotated_image(
     *,
-    result: Any,
+    image: Image.Image,
     model_id: str,
 ) -> str:
     unique_id = uuid4().hex
 
+    # บันทึกเป็น PNG (lossless) เพื่อคงสีต้นฉบับ
     result_filename = (
-        f"{model_id}_{unique_id}.jpg"
+        f"{model_id}_{unique_id}.png"
     )
 
     result_path = (
@@ -229,8 +429,9 @@ def save_annotated_image(
     )
 
     try:
-        result.save(
-            filename=str(result_path)
+        image.save(
+            str(result_path),
+            format="PNG",
         )
 
     except Exception as error:
@@ -248,11 +449,237 @@ def save_annotated_image(
     return result_filename
 
 
+def load_sahi_model(
+    *,
+    model_id: str,
+    device_name: str,
+):
+    """โหลด (และ cache) SAHI detection model สำหรับ model_id."""
+    if not _SAHI_AVAILABLE:
+        raise SahiUnavailableError(
+            "SAHI is not available on the server. "
+            f"{_SAHI_IMPORT_ERROR}".strip()
+        )
+
+    if model_id in _SAHI_MODEL_CACHE:
+        return _SAHI_MODEL_CACHE[model_id]
+
+    model_config = get_model_config(model_id)
+
+    weight_path = Path(
+        model_config["weight_path"]
+    )
+
+    if not weight_path.exists():
+        raise FileNotFoundError(
+            f"Weight file not found: "
+            f"{weight_path}"
+        )
+
+    print(
+        f"[SAHI] Loading SAHI model: "
+        f"{model_id}"
+    )
+
+    try:
+        model = AutoDetectionModel.from_pretrained(
+            model_type="ultralytics",
+            model_path=str(weight_path),
+            confidence_threshold=0.25,
+            device=device_name,
+        )
+
+    except Exception as error:
+        raise ModelLoadError(
+            f"Cannot load SAHI model "
+            f"'{model_id}': {error}"
+        ) from error
+
+    _SAHI_MODEL_CACHE[model_id] = model
+
+    return model
+
+
+def _detections_from_boxes(
+    result,
+) -> list[dict[str, Any]]:
+    """แปลงผลลัพธ์ RTDETR (result.boxes) เป็นรูปแบบมาตรฐาน."""
+    detections: list[dict[str, Any]] = []
+
+    if result.boxes is None:
+        return detections
+
+    for box in result.boxes:
+        class_id = int(box.cls[0].item())
+
+        confidence_score = float(
+            box.conf[0].item()
+        )
+
+        x1, y1, x2, y2 = (
+            box.xyxy[0].tolist()
+        )
+
+        class_name = result.names.get(
+            class_id,
+            str(class_id),
+        )
+
+        detections.append(
+            {
+                "class_id": class_id,
+                "class_name": class_name,
+                "confidence": round(
+                    confidence_score, 4
+                ),
+                "bounding_box": {
+                    "x1": round(x1, 2),
+                    "y1": round(y1, 2),
+                    "x2": round(x2, 2),
+                    "y2": round(y2, 2),
+                },
+            }
+        )
+
+    return detections
+
+
+def _detections_from_sahi(
+    object_prediction_list,
+) -> list[dict[str, Any]]:
+    """แปลงผลลัพธ์ SAHI เป็นรูปแบบมาตรฐานเดียวกัน."""
+    detections: list[dict[str, Any]] = []
+
+    for prediction in object_prediction_list:
+        box = prediction.bbox
+
+        detections.append(
+            {
+                "class_id": int(
+                    prediction.category.id
+                ),
+                "class_name": str(
+                    prediction.category.name
+                ),
+                "confidence": round(
+                    float(
+                        prediction.score.value
+                    ),
+                    4,
+                ),
+                "bounding_box": {
+                    "x1": round(
+                        float(box.minx), 2
+                    ),
+                    "y1": round(
+                        float(box.miny), 2
+                    ),
+                    "x2": round(
+                        float(box.maxx), 2
+                    ),
+                    "y2": round(
+                        float(box.maxy), 2
+                    ),
+                },
+            }
+        )
+
+    return detections
+
+
+def predict_standard(
+    *,
+    model_id: str,
+    image_array: np.ndarray,
+    confidence: float,
+    device: int | str,
+) -> list[dict[str, Any]]:
+    """RT-DETR inference ปกติ (ทั้งภาพในครั้งเดียว)."""
+    model = load_model(model_id)
+
+    # Ultralytics ถือว่า np.ndarray ที่รับเข้ามาเป็น BGR
+    # แล้วจะสลับเป็น RGB ให้โมเดลเอง (im[..., ::-1])
+    # image_array ของเราเป็น RGB จึงต้องส่งเป็น BGR เข้าไป
+    # เพื่อให้โมเดลเห็นสี RGB ที่ถูกต้อง (ผลตรวจจับแม่นยำขึ้น)
+    bgr_image = np.ascontiguousarray(
+        image_array[:, :, ::-1]
+    )
+
+    try:
+        results = model.predict(
+            source=bgr_image,
+            conf=confidence,
+            device=device,
+            verbose=False,
+        )
+
+    except Exception as error:
+        raise RuntimeError(
+            f"Prediction failed: {error}"
+        ) from error
+
+    if not results:
+        raise RuntimeError(
+            "RT-DETR returned no prediction result"
+        )
+
+    return _detections_from_boxes(results[0])
+
+
+def predict_with_sahi(
+    *,
+    model_id: str,
+    image_array: np.ndarray,
+    confidence: float,
+    device_name: str,
+) -> list[dict[str, Any]]:
+    """RT-DETR inference แบบแบ่งภาพ (sliced) ด้วย SAHI."""
+    model = load_sahi_model(
+        model_id=model_id,
+        device_name=device_name,
+    )
+
+    # ตั้ง confidence threshold ตามคำขอปัจจุบัน
+    model.confidence_threshold = confidence
+
+    # SAHI รับภาพ RGB (PIL) ได้โดยตรง
+    image = Image.fromarray(
+        image_array,
+        mode="RGB",
+    )
+
+    try:
+        result = get_sliced_prediction(
+            image,
+            model,
+            slice_height=SAHI_SLICE_SIZE,
+            slice_width=SAHI_SLICE_SIZE,
+            overlap_height_ratio=(
+                SAHI_OVERLAP_RATIO
+            ),
+            overlap_width_ratio=(
+                SAHI_OVERLAP_RATIO
+            ),
+            verbose=0,
+        )
+
+    except Exception as error:
+        raise RuntimeError(
+            f"SAHI sliced inference failed: "
+            f"{error}"
+        ) from error
+
+    return _detections_from_sahi(
+        result.object_prediction_list
+    )
+
+
 def predict_image(
     *,
     model_id: str,
     image_bytes: bytes,
     confidence: float = 0.25,
+    use_sahi: bool = False,
 ) -> dict[str, Any]:
     if not 0.0 <= confidence <= 1.0:
         raise ValueError(
@@ -263,8 +690,6 @@ def predict_image(
     image_array = decode_image(
         image_bytes
     )
-
-    model = load_model(model_id)
 
     device = get_device()
 
@@ -283,77 +708,41 @@ def predict_image(
     )
 
     print(
+        f"[PREDICT] SAHI: {use_sahi}"
+    )
+
+    print(
         f"[PREDICT] Image shape: "
         f"{image_array.shape}"
     )
 
-    try:
-        results = model.predict(
-            source=image_array,
-            conf=confidence,
+    if use_sahi:
+        detections = predict_with_sahi(
+            model_id=model_id,
+            image_array=image_array,
+            confidence=confidence,
+            device_name=device_name,
+        )
+    else:
+        detections = predict_standard(
+            model_id=model_id,
+            image_array=image_array,
+            confidence=confidence,
             device=device,
-            verbose=False,
         )
-
-    except Exception as error:
-        raise RuntimeError(
-            f"Prediction failed: {error}"
-        ) from error
-
-    if not results:
-        raise RuntimeError(
-            "YOLO returned no prediction result"
-        )
-
-    result = results[0]
-
-    detections: list[
-        dict[str, Any]
-    ] = []
-
-    if result.boxes is not None:
-        for box in result.boxes:
-            class_id = int(
-                box.cls[0].item()
-            )
-
-            confidence_score = float(
-                box.conf[0].item()
-            )
-
-            x1, y1, x2, y2 = (
-                box.xyxy[0].tolist()
-            )
-
-            class_name = result.names.get(
-                class_id,
-                str(class_id),
-            )
-
-            detections.append(
-                {
-                    "class_id": class_id,
-                    "class_name": class_name,
-                    "confidence": round(
-                        confidence_score,
-                        4,
-                    ),
-                    "bounding_box": {
-                        "x1": round(x1, 2),
-                        "y1": round(y1, 2),
-                        "x2": round(x2, 2),
-                        "y2": round(y2, 2),
-                    },
-                }
-            )
 
     image_height, image_width = (
         image_array.shape[:2]
     )
 
+    annotated_image = render_annotated_image(
+        image_array=image_array,
+        detections=detections,
+    )
+
     result_image_filename = (
         save_annotated_image(
-            result=result,
+            image=annotated_image,
             model_id=model_id,
         )
     )
@@ -361,6 +750,7 @@ def predict_image(
     return {
         "model_id": model_id,
         "device": device_name,
+        "used_sahi": use_sahi,
         "image_width": image_width,
         "image_height": image_height,
         "confidence_threshold": confidence,

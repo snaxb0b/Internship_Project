@@ -190,6 +190,7 @@ function ImageDropZone({
           accept=".jpg,.jpeg,.png,.webp"
           onChange={handleInputChange}
           disabled={disabled}
+          tabIndex={-1}
           aria-label="Choose an image to upload"
         />
 

@@ -42,7 +42,7 @@ export function validatePredictionInput({
 
   if (!modelId) {
     errors.modelId =
-      "Please select a YOLO model";
+      "Please select an RT-DETR model";
   }
 
   const confidenceNumber =

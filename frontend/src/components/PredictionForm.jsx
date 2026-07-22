@@ -23,6 +23,9 @@ function PredictionForm({
   confidence,
   onConfidenceChange,
 
+  sahiEnabled,
+  onSahiChange,
+
   selectedFile,
   onFileChange,
 
@@ -34,6 +37,7 @@ function PredictionForm({
 
   onSubmit,
   onReset,
+  onCancel,
 }) {
   const selectedModel =
     models.find(
@@ -105,10 +109,52 @@ function PredictionForm({
             then add the image you want to inspect.
           </p>
         </div>
+
+        <div className="sahi-toggle">
+          <span className="sahi-toggle-text">
+            <span className="sahi-toggle-title">
+              SAHI mode
+            </span>
+
+            <span
+              className={
+                sahiEnabled
+                  ? "sahi-toggle-state sahi-toggle-state--on"
+                  : "sahi-toggle-state"
+              }
+            >
+              {sahiEnabled
+                ? "Enabled"
+                : "Disabled"}
+            </span>
+          </span>
+
+          <button
+            type="button"
+            role="switch"
+            aria-checked={sahiEnabled}
+            className={
+              sahiEnabled
+                ? "sahi-switch sahi-switch--on"
+                : "sahi-switch"
+            }
+            onClick={() => {
+              onSahiChange(!sahiEnabled);
+            }}
+            disabled={predicting}
+            aria-label={
+              sahiEnabled
+                ? "Disable SAHI"
+                : "Enable SAHI"
+            }
+          >
+            <span className="sahi-switch-thumb" />
+          </button>
+        </div>
       </div>
 
       <ErrorAlert
-        title="Cannot load YOLO models"
+        title="Cannot load RT-DETR models"
         message={modelsError}
         onRetry={onReloadModels}
       />
@@ -125,57 +171,64 @@ function PredictionForm({
 
             <div>
               <label htmlFor="model-select">
-                YOLO model
+                RT-DETR model
               </label>
               <p>Choose the detector that fits your image.</p>
             </div>
           </div>
 
           <div className="form-field">
-            <select
-              id="model-select"
-              value={modelId}
-              onChange={(event) => {
-                onModelChange(
-                  event.target.value
-                );
-              }}
-              disabled={
-                modelsLoading ||
-                models.length === 0 ||
-                predicting
-              }
-              aria-invalid={Boolean(fieldErrors.modelId)}
-              aria-describedby={
-                fieldErrors.modelId
-                  ? "model-error"
-                  : selectedModel
-                    ? "model-description"
-                    : undefined
-              }
-            >
-              {modelsLoading && (
-                <option value="">
-                  Loading models...
-                </option>
-              )}
-
-              {!modelsLoading &&
-                models.length === 0 && (
+            {modelsLoading ? (
+              <div className="model-select-loading">
+                <span
+                  className="skeleton select-skeleton"
+                  aria-hidden="true"
+                />
+                <span
+                  className="sr-only"
+                  role="status"
+                >
+                  Loading models
+                </span>
+              </div>
+            ) : (
+              <select
+                id="model-select"
+                value={modelId}
+                onChange={(event) => {
+                  onModelChange(
+                    event.target.value
+                  );
+                }}
+                disabled={
+                  models.length === 0 ||
+                  predicting
+                }
+                aria-invalid={Boolean(fieldErrors.modelId)}
+                aria-describedby={
+                  fieldErrors.modelId
+                    ? "model-error"
+                    : selectedModel
+                      ? "model-description"
+                      : undefined
+                }
+              >
+                {models.length === 0 && (
                   <option value="">
                     No models available
                   </option>
                 )}
 
-              {models.map((model) => (
-                <option
-                  key={model.id}
-                  value={model.id}
-                >
-                  {model.name} ({model.id})
-                </option>
-              ))}
-            </select>
+                {models.map((model) => (
+                  <option
+                    key={model.id}
+                    value={model.id}
+                  >
+                    {model.name} ({model.id})
+                  </option>
+                ))}
+              </select>
+            )}
 
             {fieldErrors.modelId && (
               <small
@@ -417,15 +470,25 @@ function PredictionForm({
 
         <div className="form-actions">
           <div className="form-action-buttons">
-            <button
-              className="reset-button"
-              type="button"
-              onClick={onReset}
-              disabled={predicting}
-            >
-              <Icon name="refresh" size={18} />
-              Reset
-            </button>
+            {predicting ? (
+              <button
+                className="reset-button"
+                type="button"
+                onClick={onCancel}
+              >
+                <Icon name="close" size={18} />
+                Cancel
+              </button>
+            ) : (
+              <button
+                className="reset-button"
+                type="button"
+                onClick={onReset}
+              >
+                <Icon name="refresh" size={18} />
+                Reset
+              </button>
+            )}
 
             <button
               className="predict-button"

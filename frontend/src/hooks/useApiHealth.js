@@ -1,5 +1,6 @@
 import {
   useEffect,
+  useRef,
   useState,
 } from "react";
 
@@ -17,6 +18,12 @@ export function useApiHealth() {
 
   const [reloadKey, setReloadKey] =
     useState(0);
+
+  const statusRef = useRef(status);
+
+  useEffect(() => {
+    statusRef.current = status;
+  }, [status]);
 
 
   useEffect(() => {
@@ -58,6 +65,59 @@ export function useApiHealth() {
       controller.abort();
     };
   }, [reloadKey]);
+
+
+  /*
+   * ตรวจสุขภาพ API ใหม่อัตโนมัติ
+   * เมื่อเน็ตกลับมา หรือกลับมาที่แท็บ
+   * ทั้งนี้เฉพาะตอนที่ยังไม่ online
+   * เพื่อไม่ให้ยิง request โดยไม่จำเป็น
+   */
+  useEffect(() => {
+    function recheck() {
+      setReloadKey(
+        (currentKey) => currentKey + 1
+      );
+    }
+
+    function handleOnline() {
+      if (statusRef.current !== "online") {
+        recheck();
+      }
+    }
+
+    function handleVisibility() {
+      if (
+        document.visibilityState ===
+          "visible" &&
+        statusRef.current !== "online"
+      ) {
+        recheck();
+      }
+    }
+
+    window.addEventListener(
+      "online",
+      handleOnline
+    );
+
+    document.addEventListener(
+      "visibilitychange",
+      handleVisibility
+    );
+
+    return () => {
+      window.removeEventListener(
+        "online",
+        handleOnline
+      );
+
+      document.removeEventListener(
+        "visibilitychange",
+        handleVisibility
+      );
+    };
+  }, []);
 
 
   function retryHealthCheck() {
