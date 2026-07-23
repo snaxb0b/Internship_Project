@@ -110,6 +110,17 @@ const iconPaths = {
       <path d="m14 7 5 5-5 5" />
     </>
   ),
+  filter: (
+    <>
+      <path d="M3 5h18M6 10h12M10 15h4" />
+    </>
+  ),
+  chevronDown: (
+    <path d="m6 9 6 6 6-6" />
+  ),
+  chevronUp: (
+    <path d="m6 15 6-6 6 6" />
+  ),
   info: (
     <>
       <circle cx="12" cy="12" r="9" />

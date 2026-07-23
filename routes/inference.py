@@ -190,6 +190,20 @@ async def predict_uploaded_image(
         f"{result_filename}"
     )
 
+    # ภาพต้นฉบับ (ไม่มีกล่อง) สำหรับให้ Frontend
+    # วาดกรอบเฉพาะคลาสที่เลือกเอง
+    original_filename = (
+        prediction_result.get(
+            "original_image_filename"
+        )
+    )
+
+    original_image_url = (
+        f"{base_url}/results/{original_filename}"
+        if original_filename
+        else None
+    )
+
     return {
         "message": (
             "Prediction completed successfully"
@@ -202,5 +216,8 @@ async def predict_uploaded_image(
         **prediction_result,
         "result_image_url": (
             result_image_url
+        ),
+        "original_image_url": (
+            original_image_url
         ),
     }

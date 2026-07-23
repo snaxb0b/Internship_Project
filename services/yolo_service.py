@@ -407,24 +407,21 @@ def render_annotated_image(
     return image
 
 
-def save_annotated_image(
+def _persist_png_image(
     *,
     image: Image.Image,
-    model_id: str,
+    result_filename: str,
 ) -> str:
-    unique_id = uuid4().hex
-
-    # บันทึกเป็น PNG (lossless) เพื่อคงสีต้นฉบับ
-    result_filename = (
-        f"{model_id}_{unique_id}.png"
-    )
-
+    """
+    บันทึกภาพเป็น PNG (lossless) เพื่อคงความ
+    ละเอียดและสีของภาพต้นฉบับไว้ครบถ้วน
+    """
     result_path = (
         RESULTS_DIR / result_filename
     )
 
     print(
-        f"[RESULT] Saving annotated image: "
+        f"[RESULT] Saving image: "
         f"{result_path}"
     )
 
@@ -436,17 +433,51 @@ def save_annotated_image(
 
     except Exception as error:
         raise RuntimeError(
-            "Cannot save annotated image: "
+            "Cannot save result image: "
             f"{error}"
         ) from error
 
     if not result_path.exists():
         raise RuntimeError(
-            "Annotated image was not created: "
+            "Result image was not created: "
             f"{result_path}"
         )
 
     return result_filename
+
+
+def save_annotated_image(
+    *,
+    image: Image.Image,
+    model_id: str,
+) -> str:
+    return _persist_png_image(
+        image=image,
+        result_filename=(
+            f"{model_id}_{uuid4().hex}.png"
+        ),
+    )
+
+
+def save_original_image(
+    *,
+    image: Image.Image,
+    model_id: str,
+) -> str:
+    """
+    บันทึกภาพต้นฉบับ (ยังไม่วาดกล่อง) แยกอีกไฟล์
+
+    Frontend ใช้ภาพนี้เป็นฐานในการวาดกรอบ
+    ที่ผู้ใช้เลือกกรองเอง โดยไม่ต้องรัน
+    inference ใหม่ และคงสี/ความละเอียดเดิม
+    """
+    return _persist_png_image(
+        image=image,
+        result_filename=(
+            f"{model_id}_original_"
+            f"{uuid4().hex}.png"
+        ),
+    )
 
 
 def load_sahi_model(
@@ -747,6 +778,21 @@ def predict_image(
         )
     )
 
+    # เก็บภาพต้นฉบับ (ไม่มีกล่อง) ไว้ให้ Frontend
+    # ใช้วาดกรอบเฉพาะคลาสที่ผู้ใช้เลือก โดยไม่
+    # ต้อง inference ใหม่ (คงสี/ความละเอียดเดิม)
+    original_image = Image.fromarray(
+        image_array,
+        mode="RGB",
+    )
+
+    original_image_filename = (
+        save_original_image(
+            image=original_image,
+            model_id=model_id,
+        )
+    )
+
     return {
         "model_id": model_id,
         "device": device_name,
@@ -758,5 +804,8 @@ def predict_image(
         "detections": detections,
         "result_image_filename": (
             result_image_filename
+        ),
+        "original_image_filename": (
+            original_image_filename
         ),
     }

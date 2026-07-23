@@ -43,6 +43,9 @@ def create_fake_prediction_result(
         "result_image_filename": (
             "test-result.jpg"
         ),
+        "original_image_filename": (
+            "test-original.png"
+        ),
     }
 
 
@@ -154,6 +157,12 @@ def test_predict_success(
         "result_image_url"
     ].endswith(
         "/results/test-result.jpg"
+    )
+
+    assert response_data[
+        "original_image_url"
+    ].endswith(
+        "/results/test-original.png"
     )
 
 
