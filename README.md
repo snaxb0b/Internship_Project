@@ -18,12 +18,38 @@ using React, FastAPI, and Ultralytics YOLO.
 - Node.js
 - npm
 - Git
+- Git LFS (required to download the RT-DETR model weights)
 
 ## Clone the repository
+
+The RT-DETR model weights are stored with **Git LFS**. Install Git LFS
+**before** cloning so the real weight files are downloaded — otherwise you
+will only get small text pointer files instead of the actual `.pt` models:
+
+```bash
+git lfs install
+```
+
+Then clone:
 
 ```bash
 git clone git@github.com:snaxb0b/Internship_Project.git
 cd Internship_Project
+```
+
+If you already cloned the repository **without** Git LFS installed, run this
+inside the project to fetch the real weight files:
+
+```bash
+git lfs install
+git lfs pull
+```
+
+You can verify the weights are real files (not pointers) — each should be tens
+of MB, not a few hundred bytes:
+
+```bash
+git lfs ls-files
 ```
 
 ## Backend setup
@@ -105,7 +131,12 @@ npm run build
 
 ## Model weights
 
-YOLO model files are not stored in Git.
+The RT-DETR weights used by the app (`weights/rtdetr-l.pt`,
+`weights/rtdetr-x.pt`) are tracked with **Git LFS**, so they come with the
+repository as long as Git LFS is installed (see
+[Clone the repository](#clone-the-repository)). Without Git LFS you will only
+get small pointer files, and the backend will fail to load the models.
 
-Place the required `.pt` files inside the `weights/` directory before
-running predictions.
+Any other `.pt` files are not stored in Git — place them inside the
+`weights/` directory manually, or let Ultralytics download them automatically
+on first use.

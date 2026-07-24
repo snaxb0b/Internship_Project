@@ -12,8 +12,12 @@ Example paths:
 weights/rtdetr-l.pt
 weights/rtdetr-x.pt
 
-The weights are downloaded automatically by Ultralytics from the official
-release assets (e.g. `https://github.com/ultralytics/assets/releases`) the
-first time a model is used, or you can place them here manually.
+`rtdetr-l.pt` and `rtdetr-x.pt` are tracked with **Git LFS**, so they are
+included with the repository when Git LFS is installed. If you cloned without
+Git LFS, run `git lfs install && git lfs pull` to download the real files
+(otherwise you will only get small LFS pointer files).
 
-The model files are not stored in Git because they are large binary files.
+Any other model files are not committed — you can place them here manually, or
+Ultralytics will download them automatically from the official release assets
+(e.g. `https://github.com/ultralytics/assets/releases`) the first time a model
+is used.
