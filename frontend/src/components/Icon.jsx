@@ -115,6 +115,18 @@ const iconPaths = {
       <path d="M3 5h18M6 10h12M10 15h4" />
     </>
   ),
+  star: (
+    <>
+      <path d="M12 5v14M6 8l12 8M18 8l-12 8" />
+    </>
+  ),
+  home: (
+    <>
+      <path d="M3 10.5 12 4l9 6.5" />
+      <path d="M5 9.6V20a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1V9.6" />
+      <path d="M9.5 21v-6.5h5V21" />
+    </>
+  ),
   chevronDown: (
     <path d="m6 9 6 6 6-6" />
   ),

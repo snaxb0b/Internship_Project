@@ -127,11 +127,11 @@ function PredictionHistory({
 
           <div className="section-heading-copy">
             <span className="section-kicker">
-              Step 03
+              Step 3
             </span>
 
             <h2 id="history-title">
-              Revisit recent predictions
+              Revisit Recent Predictions
             </h2>
 
             <p>

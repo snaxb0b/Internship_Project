@@ -7,6 +7,13 @@ import {
 
 const STORAGE_KEY = "theme";
 
+/*
+ * มี useTheme() หลายที่ในหน้าเดียวกัน (เมนู workspace
+ * + dock หน้า landing ที่ mount ค้างไว้) จึง broadcast
+ * ผ่าน custom event ให้ทุก instance sync ธีมตรงกัน
+ */
+const THEME_EVENT = "app:themechange";
+
 
 /*
  * ธีมเริ่มต้นถูกตั้งไว้บน <html data-theme="...">
@@ -29,6 +36,24 @@ function readInitialTheme() {
 }
 
 
+/*
+ * ตั้งธีมบน DOM (แหล่งความจริง) แล้วกระจายให้ทุก
+ * instance ของ useTheme อัปเดต state ตาม
+ */
+function applyTheme(nextTheme) {
+  document.documentElement.setAttribute(
+    "data-theme",
+    nextTheme
+  );
+
+  window.dispatchEvent(
+    new CustomEvent(THEME_EVENT, {
+      detail: nextTheme,
+    })
+  );
+}
+
+
 export function useTheme() {
   const [theme, setTheme] =
     useState(readInitialTheme);
@@ -40,6 +65,33 @@ export function useTheme() {
       theme
     );
   }, [theme]);
+
+
+  /*
+   * sync ทุก instance ในแท็บเดียวกัน เมื่อมีการ
+   * เปลี่ยนธีมจากที่ใดก็ตาม
+   */
+  useEffect(() => {
+    function handleThemeEvent(event) {
+      setTheme(
+        event.detail === "dark"
+          ? "dark"
+          : "light"
+      );
+    }
+
+    window.addEventListener(
+      THEME_EVENT,
+      handleThemeEvent
+    );
+
+    return () => {
+      window.removeEventListener(
+        THEME_EVENT,
+        handleThemeEvent
+      );
+    };
+  }, []);
 
 
   /*
@@ -64,7 +116,7 @@ export function useTheme() {
         return;
       }
 
-      setTheme(
+      applyTheme(
         event.matches ? "dark" : "light"
       );
     }
@@ -84,23 +136,26 @@ export function useTheme() {
 
 
   const toggleTheme = useCallback(() => {
-    setTheme((previousTheme) => {
-      const nextTheme =
-        previousTheme === "dark"
-          ? "light"
-          : "dark";
+    const current =
+      document.documentElement.getAttribute(
+        "data-theme"
+      ) === "dark"
+        ? "dark"
+        : "light";
 
-      try {
-        window.localStorage.setItem(
-          STORAGE_KEY,
-          nextTheme
-        );
-      } catch {
-        /* localStorage อาจถูกปิดใช้งาน */
-      }
+    const nextTheme =
+      current === "dark" ? "light" : "dark";
 
-      return nextTheme;
-    });
+    try {
+      window.localStorage.setItem(
+        STORAGE_KEY,
+        nextTheme
+      );
+    } catch {
+      /* localStorage อาจถูกปิดใช้งาน */
+    }
+
+    applyTheme(nextTheme);
   }, []);
 
 

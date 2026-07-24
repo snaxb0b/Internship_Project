@@ -1,11 +1,20 @@
 import {
   useCallback,
   useMemo,
+  useRef,
   useState,
 } from "react";
 
 import Icon from "./Icon";
 import ClassFilterDropdown from "./ClassFilterDropdown";
+
+
+/*
+ * ค่าเริ่มต้นแสดงเพียงไม่กี่รายการเพื่อลดความยาว
+ * หน้า แล้วให้ผู้ใช้กด "Load more" เผยรายการเพิ่ม
+ */
+const DEFAULT_VISIBLE_ROWS = 4;
+const LOAD_MORE_STEP = 6;
 
 import {
   colorForClassId,
@@ -137,9 +146,17 @@ function SortControl({
 function PredictionResult({
   result,
   predicting,
+  onImageReady,
 }) {
   const [imageStatus, setImageStatus] =
     useState("loading");
+
+  /*
+   * ยิง onImageReady ครั้งเดียวต่อผลลัพธ์ (component
+   * ถูก remount ต่อผลลัพธ์ผ่าน key ที่ parent → ref
+   * นี้รีเซ็ตเองทุกผลลัพธ์)
+   */
+  const imageReadyFiredRef = useRef(false);
 
   const [exporting, setExporting] =
     useState(false);
@@ -148,6 +165,13 @@ function PredictionResult({
     column: "confidence",
     direction: "desc",
   });
+
+  const [detectionsOpen, setDetectionsOpen] =
+    useState(true);
+
+  const [rowLimit, setRowLimit] = useState(
+    DEFAULT_VISIBLE_ROWS
+  );
 
   const detections = useMemo(
     () => result?.detections ?? [],
@@ -263,6 +287,52 @@ function PredictionResult({
     });
   }, []);
 
+  const handleImageLoaded = useCallback(() => {
+    setImageStatus("loaded");
+
+    if (!imageReadyFiredRef.current) {
+      imageReadyFiredRef.current = true;
+      onImageReady?.();
+    }
+  }, [onImageReady]);
+
+  const handleLoadMore = useCallback(() => {
+    setRowLimit(
+      (current) => current + LOAD_MORE_STEP
+    );
+  }, []);
+
+  const handleLoadAll = useCallback(() => {
+    /*
+     * แสดงทุกรายการทันที — ใช้ค่าใหญ่พอ (slice จะ
+     * คืนทั้งหมด) จึงครอบคลุมแม้จำนวนจะเปลี่ยนภายหลัง
+     */
+    setRowLimit(Number.MAX_SAFE_INTEGER);
+  }, []);
+
+  const handleHideRows = useCallback(() => {
+    setRowLimit(DEFAULT_VISIBLE_ROWS);
+  }, []);
+
+  /*
+   * เปลี่ยนตัวกรองคลาส → จำนวนรายการที่มองเห็นได้
+   * เปลี่ยนไป จึงรีเซ็ต "Load more" กลับค่าเริ่มต้น
+   * ปรับ state ระหว่าง render (แพตเทิร์นที่ React
+   * แนะนำ แทน useEffect) — การจัดเรียงเพียงสลับ
+   * ลำดับ จึงไม่ทำให้รีเซ็ต
+   */
+  const [
+    trackedSelectedClasses,
+    setTrackedSelectedClasses,
+  ] = useState(selectedClasses);
+
+  if (
+    trackedSelectedClasses !== selectedClasses
+  ) {
+    setTrackedSelectedClasses(selectedClasses);
+    setRowLimit(DEFAULT_VISIBLE_ROWS);
+  }
+
   /*
    * กล่องที่ "มองเห็นได้" = กรองตามคลาสที่เลือก
    *
@@ -330,6 +400,33 @@ function PredictionResult({
   const totalCount = detections.length;
   const visibleCount = filteredDetections.length;
   const isFiltered = visibleCount !== totalCount;
+
+  /*
+   * รายการที่ "แสดงในตาราง" ถูกจำกัดด้วย rowLimit
+   * (ส่วน overlay บนภาพยังใช้ filteredDetections ครบ
+   * ทุกกล่อง — Load more ย่อเฉพาะตาราง ไม่ใช่ภาพ)
+   */
+  const displayedDetections = useMemo(
+    () => sortedDetections.slice(0, rowLimit),
+    [sortedDetections, rowLimit]
+  );
+
+  const hiddenCount =
+    sortedDetections.length -
+    displayedDetections.length;
+
+  /* ยังมีรายการซ่อนอยู่ → เปิดใช้ Load more / Load all */
+  const hasHiddenRows = hiddenCount > 0;
+
+  /* แสดงมากกว่าค่าเริ่มต้นอยู่ → เปิดใช้ Hide */
+  const showingExtraRows =
+    displayedDetections.length >
+    DEFAULT_VISIBLE_ROWS;
+
+  /* แสดงกลุ่มปุ่มก็ต่อเมื่อมีอะไรให้แบ่งหน้าจริง */
+  const showRowControls =
+    sortedDetections.length >
+    DEFAULT_VISIBLE_ROWS;
 
   const imageWidth = Number(result?.image_width) || 0;
   const imageHeight =
@@ -420,7 +517,7 @@ function PredictionResult({
 
   return (
     <section
-      className="panel result-panel"
+      className="panel result-panel step-panel"
       id="result"
       aria-labelledby="result-title"
       aria-busy={predicting}
@@ -432,11 +529,11 @@ function PredictionResult({
 
         <div className="section-heading-copy">
           <span className="section-kicker">
-            Step 02
+            Step 2
           </span>
 
           <h2 id="result-title">
-            Review the prediction
+            Review the Prediction
           </h2>
 
           <p>
@@ -500,61 +597,6 @@ function PredictionResult({
           className="prediction-content"
           aria-live="polite"
         >
-          <div className="summary-grid">
-            <article className="summary-card">
-              <span className="summary-icon">
-                <Icon name="model" size={19} />
-              </span>
-
-              <div>
-                <span>Model</span>
-                <strong title={result.model_id}>
-                  {result.model_id}
-                </strong>
-              </div>
-            </article>
-
-            <article className="summary-card">
-              <span className="summary-icon">
-                <Icon name="sparkles" size={19} />
-              </span>
-
-              <div>
-                <span>Objects</span>
-                <strong>
-                  {result.object_count}
-                </strong>
-              </div>
-            </article>
-
-            <article className="summary-card">
-              <span className="summary-icon">
-                <Icon name="device" size={19} />
-              </span>
-
-              <div>
-                <span>Device</span>
-                <strong>
-                  {result.device}
-                </strong>
-              </div>
-            </article>
-
-            <article className="summary-card">
-              <span className="summary-icon">
-                <Icon name="maximize" size={19} />
-              </span>
-
-              <div>
-                <span>Image size</span>
-                <strong>
-                  {result.image_width}
-                  {"×"}
-                  {result.image_height}
-                </strong>
-              </div>
-            </article>
-          </div>
 
           {baseImageUrl && (
             <div className="result-image">
@@ -646,12 +688,10 @@ function PredictionResult({
                             node.naturalWidth > 0 &&
                             imageStatus === "loading"
                           ) {
-                            setImageStatus("loaded");
+                            handleImageLoaded();
                           }
                         }}
-                        onLoad={() =>
-                          setImageStatus("loaded")
-                        }
+                        onLoad={handleImageLoaded}
                         onError={() =>
                           setImageStatus("error")
                         }
@@ -755,37 +795,120 @@ function PredictionResult({
             </div>
           )}
 
-          <div className="detections-section">
-            <div className="detections-heading">
-              <div className="detections-heading-copy">
-                <h3>Detected objects</h3>
-                <p>Confidence and bounding box for each result.</p>
-              </div>
+          {/* metadata แบบกะทัดรัด — รองจากภาพผลลัพธ์ */}
+          <div
+            className="summary-meta"
+            aria-label="Prediction details"
+          >
+            <span className="summary-meta-item">
+              <Icon name="model" size={15} />
+              <span className="summary-meta-label">
+                Model
+              </span>
+              <strong title={result.model_id}>
+                {result.model_id}
+              </strong>
+            </span>
 
-              <div className="detections-heading-tools">
-                <span className="detections-count">
-                  {isFiltered
-                    ? `${visibleCount} of ${totalCount}`
-                    : totalCount}
-                  {" "}
-                  {totalCount === 1
-                    ? "item"
-                    : "items"}
+            <span className="summary-meta-item">
+              <Icon name="sparkles" size={15} />
+              <span className="summary-meta-label">
+                Objects
+              </span>
+              <strong>
+                {result.object_count}
+              </strong>
+            </span>
+
+            <span className="summary-meta-item">
+              <Icon name="device" size={15} />
+              <span className="summary-meta-label">
+                Device
+              </span>
+              <strong>{result.device}</strong>
+            </span>
+
+            <span className="summary-meta-item">
+              <Icon name="maximize" size={15} />
+              <span className="summary-meta-label">
+                Size
+              </span>
+              <strong>
+                {result.image_width}
+                {"×"}
+                {result.image_height}
+              </strong>
+            </span>
+          </div>
+
+          <div
+            className={
+              detectionsOpen
+                ? "detections-section is-open"
+                : "detections-section is-collapsed"
+            }
+          >
+            <button
+              type="button"
+              className="detections-toggle"
+              aria-expanded={detectionsOpen}
+              aria-controls="detections-panel"
+              onClick={() =>
+                setDetectionsOpen(
+                  (current) => !current
+                )
+              }
+            >
+              <span
+                className="detections-toggle-caret"
+                aria-hidden="true"
+              >
+                <Icon name="chevronDown" size={18} />
+              </span>
+
+              <span className="detections-toggle-text">
+              <span className="detections-toggle-title">
+                Detected Objects
                 </span>
+                <span className="detections-toggle-sub">
+                  Confidence and bounding box for each result.
+                </span>
+              </span>
 
+              <span className="detections-count">
+                {isFiltered
+                  ? `${visibleCount} of ${totalCount}`
+                  : totalCount}
+                {" "}
+                {totalCount === 1
+                  ? "item"
+                  : "items"}
+              </span>
+            </button>
+
+            {detectionsOpen && (
+              <div
+                className="detections-body"
+                id="detections-panel"
+              >
                 {totalCount > 0 && (
-                  <ClassFilterDropdown
-                    classes={classSummary}
-                    selected={selectedClasses}
-                    onToggleClass={handleToggleClass}
-                    onSetAll={handleSetAll}
-                  />
-                )}
-              </div>
-            </div>
+                  <div className="detections-toolbar">
+                    <span className="detections-toolbar-hint">
+                      Filter which classes appear in the
+                      list and on the image.
+                    </span>
 
-            {totalCount > 0 ? (
-              visibleCount > 0 ? (
+                    <ClassFilterDropdown
+                      classes={classSummary}
+                      selected={selectedClasses}
+                      onToggleClass={handleToggleClass}
+                      onSetAll={handleSetAll}
+                    />
+                  </div>
+                )}
+
+                {totalCount > 0 ? (
+                  visibleCount > 0 ? (
                 <>
                   <div
                     className="detection-sort-mobile"
@@ -857,13 +980,13 @@ function PredictionResult({
                           </th>
 
                           <th scope="col">
-                            Bounding box
+                            Bounding Box
                           </th>
                         </tr>
                       </thead>
 
                       <tbody>
-                        {sortedDetections.map(
+                        {displayedDetections.map(
                           (
                             { detection, sourceIndex },
                             index
@@ -1010,6 +1133,54 @@ function PredictionResult({
                       </tbody>
                     </table>
                   </div>
+
+                  {showRowControls && (
+                    <div
+                      className="detections-load-more"
+                      role="group"
+                      aria-label="Show more or fewer detections"
+                    >
+                      <button
+                        type="button"
+                        className="load-more-button"
+                        onClick={handleLoadMore}
+                        disabled={!hasHiddenRows}
+                      >
+                        <Icon
+                          name="chevronDown"
+                          size={16}
+                        />
+                        Load more
+                        {hasHiddenRows && (
+                          <span className="load-more-count">
+                            {hiddenCount}
+                          </span>
+                        )}
+                      </button>
+
+                      <button
+                        type="button"
+                        className="load-more-button"
+                        onClick={handleLoadAll}
+                        disabled={!hasHiddenRows}
+                      >
+                        Load all
+                      </button>
+
+                      <button
+                        type="button"
+                        className="load-more-button load-more-button--less"
+                        onClick={handleHideRows}
+                        disabled={!showingExtraRows}
+                      >
+                        <Icon
+                          name="chevronUp"
+                          size={16}
+                        />
+                        Hide
+                      </button>
+                    </div>
+                  )}
                 </>
               ) : (
                 <div
@@ -1049,6 +1220,8 @@ function PredictionResult({
                     Try a lower confidence value or another image.
                   </p>
                 </div>
+              </div>
+                )}
               </div>
             )}
           </div>

@@ -1,4 +1,5 @@
 import {
+  useCallback,
   useEffect,
   useRef,
   useState,
@@ -6,37 +7,47 @@ import {
 
 import ApiStatus from "./ApiStatus";
 import Icon from "./Icon";
+import { useTheme } from "../hooks/useTheme";
 
 
 const navigationSteps = [
   {
-    number: "01",
+    number: "1",
     icon: "upload",
-    title: "Configure prediction",
+    title: "Configure Prediction",
     description: "Model, confidence and image",
     target: "configuration",
   },
   {
-    number: "02",
+    number: "2",
     icon: "sparkles",
-    title: "Review result",
+    title: "Review Result",
     description: "Annotated image and detections",
     target: "result",
   },
   {
-    number: "03",
+    number: "3",
     icon: "history",
-    title: "Prediction history",
+    title: "Prediction History",
     description: "Open your recent results",
     target: "history",
   },
 ];
 
 
+/*
+ * แถบหัวหน้า Workspace
+ *   ซ้าย : ปุ่ม Home (บ้าน) + ปุ่มเมนู hamburger เท่านั้น
+ *   ขวา  : สถานะ API
+ *
+ * เมนู hamburger = การนำทาง Step 1-3 + สลับธีม +
+ * ปุ่มปิดสีแดงเต็มความกว้าง (ไม่มีแบรนด์/ลิงก์อื่น)
+ */
 function AppHeader({
   apiStatus,
   apiError,
   onRetryApi,
+  onGoHome,
 }) {
   const [activeStep, setActiveStep] =
     useState(navigationSteps[0].target);
@@ -44,11 +55,16 @@ function AppHeader({
   const [isMenuOpen, setIsMenuOpen] =
     useState(false);
 
+  const { theme, toggleTheme } = useTheme();
+  const isDark = theme === "dark";
+
   const menuButtonRef = useRef(null);
-  const closeButtonRef = useRef(null);
   const drawerRef = useRef(null);
 
 
+  /*
+   * ไฮไลต์ Step ที่กำลังดูอยู่ ตามตำแหน่งสกรอลล์
+   */
   useEffect(() => {
     const sections = navigationSteps
       .map((step) =>
@@ -156,6 +172,10 @@ function AppHeader({
   }, []);
 
 
+  /*
+   * เปิดเมนู: ล็อกสกรอลล์ + โฟกัสรายการแรก + ดัก Tab
+   * ให้วนในเมนู และปิดด้วย Escape
+   */
   useEffect(() => {
     if (!isMenuOpen) {
       return undefined;
@@ -168,7 +188,11 @@ function AppHeader({
 
     const focusFrame =
       window.requestAnimationFrame(() => {
-        closeButtonRef.current?.focus();
+        drawerRef.current
+          ?.querySelector(
+            "a[href], button:not([disabled])"
+          )
+          ?.focus();
       });
 
     function handleKeyDown(event) {
@@ -236,16 +260,42 @@ function AppHeader({
   }, [isMenuOpen]);
 
 
-  function closeMenu(restoreFocus = false) {
-    setIsMenuOpen(false);
+  const closeMenu = useCallback(
+    (restoreFocus = false) => {
+      setIsMenuOpen(false);
 
-    if (restoreFocus) {
-      window.requestAnimationFrame(() => {
-        menuButtonRef.current?.focus({
-          preventScroll: true,
+      if (restoreFocus) {
+        window.requestAnimationFrame(() => {
+          menuButtonRef.current?.focus({
+            preventScroll: true,
+          });
         });
-      });
-    }
+      }
+    },
+    []
+  );
+
+
+  function handleStepClick(event, target) {
+    event.preventDefault();
+
+    setActiveStep(target);
+    closeMenu(true);
+
+    const section =
+      document.getElementById(target);
+
+    const prefersReducedMotion =
+      window.matchMedia(
+        "(prefers-reduced-motion: reduce)"
+      ).matches;
+
+    section?.scrollIntoView({
+      behavior: prefersReducedMotion
+        ? "auto"
+        : "smooth",
+      block: "start",
+    });
   }
 
 
@@ -253,19 +303,32 @@ function AppHeader({
     <>
       <div className="app-toolbar">
         <div className="app-toolbar-inner">
-          <button
-            ref={menuButtonRef}
-            className="menu-toggle"
-            type="button"
-            onClick={() => {
-              setIsMenuOpen(true);
-            }}
-            aria-label="Open step navigation"
-            aria-expanded={isMenuOpen}
-            aria-controls="step-navigation-drawer"
-          >
-            <Icon name="menu" size={23} />
-          </button>
+          <div className="app-toolbar-left">
+            <button
+              className="icon-toolbar-button"
+              type="button"
+              onClick={onGoHome}
+              aria-label="Go to home page"
+              title="Home"
+            >
+              <Icon name="home" size={21} />
+            </button>
+
+            <button
+              ref={menuButtonRef}
+              className="icon-toolbar-button menu-toggle"
+              type="button"
+              onClick={() => {
+                setIsMenuOpen(true);
+              }}
+              aria-label="Open menu"
+              aria-expanded={isMenuOpen}
+              aria-haspopup="menu"
+              aria-controls="workspace-menu-drawer"
+            >
+              <Icon name="menu" size={23} />
+            </button>
+          </div>
 
           <ApiStatus
             status={apiStatus}
@@ -274,90 +337,6 @@ function AppHeader({
           />
         </div>
       </div>
-
-      <header
-        className="app-header"
-      >
-        <div
-          className="header-orb header-orb--one"
-          aria-hidden="true"
-        />
-
-        <div
-          className="header-orb header-orb--two"
-          aria-hidden="true"
-        />
-
-        <div className="header-inner">
-          <div className="hero-content" id="top">
-            <h1>
-              Object <span>Detection</span>
-            </h1>
-
-            <p className="header-description">
-              Upload an image, choose an RT-DETR model,
-              and turn every detection into a clear,
-              visual result in just a few steps.
-            </p>
-
-            <div className="hero-highlights">
-              <span>
-                <Icon name="check" size={16} />
-                Fast predictions
-              </span>
-
-              <span>
-                <Icon name="check" size={16} />
-                Visual results
-              </span>
-
-              <span>
-                <Icon name="check" size={16} />
-                Local history
-              </span>
-            </div>
-
-            <div
-              className="hero-workflow-card"
-              aria-label="Prediction workflow"
-            >
-              <div className="hero-workflow-flow">
-                <strong className="hero-workflow-stage">
-                  Choose a Model
-                </strong>
-
-                <span className="hero-workflow-arrow">
-                  <Icon name="arrow" size={18} />
-                </span>
-
-                <strong className="hero-workflow-stage">
-                  Set the Threshold
-                </strong>
-
-                <span className="hero-workflow-arrow">
-                  <Icon name="arrow" size={18} />
-                </span>
-
-                <strong className="hero-workflow-stage">
-                  Review detection
-                </strong>
-              </div>
-
-              <div className="hero-workflow-note">
-                <span>
-                  <Icon name="info" size={16} />
-                </span>
-
-                <p>
-                  Detection quality depends on the selected model,
-                  confidence threshold, image quality and training data.
-                  Always review important results before relying on them.
-                </p>
-              </div>
-            </div>
-          </div>
-        </div>
-      </header>
 
       <div
         className={[
@@ -377,57 +356,27 @@ function AppHeader({
             closeMenu(true);
           }}
           tabIndex={isMenuOpen ? 0 : -1}
-          aria-label="Close navigation menu"
+          aria-label="Close menu"
         />
 
         <aside
           ref={drawerRef}
-          className="side-drawer"
-          id="step-navigation-drawer"
+          className="side-drawer menu-drawer"
+          id="workspace-menu-drawer"
           role="dialog"
           aria-modal="true"
-          aria-labelledby="drawer-title"
+          aria-labelledby="menu-drawer-title"
         >
-          <div className="drawer-header">
-            <div className="drawer-brand">
-              <span className="drawer-brand-mark">
-                <Icon name="logo" size={22} />
-              </span>
-
-              <span>
-                <strong>Computer Vision</strong>
-                <small>Detection workspace</small>
-              </span>
-            </div>
-
-            <button
-              ref={closeButtonRef}
-              className="drawer-close-button"
-              type="button"
-              onClick={() => {
-                closeMenu(true);
-              }}
-              tabIndex={isMenuOpen ? 0 : -1}
-              aria-label="Close navigation menu"
-            >
-              <Icon name="close" size={20} />
-            </button>
-          </div>
-
-          <div className="drawer-copy">
-            <span>Workspace navigation</span>
-            <h2 id="drawer-title">
-              Jump to a section
-            </h2>
-            <p>
-              Move between each part of your computer-vision
-              workspace.
-            </p>
-          </div>
+          <h2
+            className="drawer-menu-title"
+            id="menu-drawer-title"
+          >
+            Menu
+          </h2>
 
           <nav
             className="drawer-navigation"
-            aria-label="Workspace sections"
+            aria-label="Workspace steps"
           >
             {navigationSteps.map((step) => {
               const isActive =
@@ -445,9 +394,11 @@ function AppHeader({
                     .filter(Boolean)
                     .join(" ")}
                   href={`#${step.target}`}
-                  onClick={() => {
-                    setActiveStep(step.target);
-                    closeMenu(true);
+                  onClick={(event) => {
+                    handleStepClick(
+                      event,
+                      step.target
+                    );
                   }}
                   tabIndex={isMenuOpen ? 0 : -1}
                   aria-current={
@@ -472,12 +423,47 @@ function AppHeader({
             })}
           </nav>
 
-          <div className="drawer-footer">
-            <Icon name="info" size={17} />
-            <span>
-              Your current form values stay in place
-              when you move between sections.
-            </span>
+          <div className="drawer-footer-controls">
+            <button
+              type="button"
+              className="drawer-utility drawer-theme-control"
+              onClick={toggleTheme}
+              tabIndex={isMenuOpen ? 0 : -1}
+            >
+              <span className="drawer-utility-icon">
+                <Icon
+                  name={isDark ? "sun" : "moon"}
+                  size={19}
+                />
+              </span>
+
+              <span className="drawer-utility-copy">
+                <strong>
+                  {isDark
+                    ? "Light mode"
+                    : "Dark mode"}
+                </strong>
+                <small>
+                  Switch the appearance
+                </small>
+              </span>
+
+              <span className="drawer-utility-state">
+                {isDark ? "Dark" : "Light"}
+              </span>
+            </button>
+
+            <button
+              type="button"
+              className="drawer-close-full"
+              onClick={() => {
+                closeMenu(true);
+              }}
+              tabIndex={isMenuOpen ? 0 : -1}
+            >
+              <Icon name="close" size={18} />
+              Cancel
+            </button>
           </div>
         </aside>
       </div>

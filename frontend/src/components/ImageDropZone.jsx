@@ -4,6 +4,7 @@ import {
   useState,
 } from "react";
 
+import ConfirmationDialog from "./ConfirmationDialog";
 import Icon from "./Icon";
 
 
@@ -21,10 +22,14 @@ function ImageDropZone({
   onFileChange,
   disabled = false,
   error = "",
+  confirmRemoval = false,
 }) {
   const inputRef = useRef(null);
 
   const [isDragging, setIsDragging] =
+    useState(false);
+
+  const [isRemoveConfirmOpen, setIsRemoveConfirmOpen] =
     useState(false);
 
 
@@ -122,12 +127,32 @@ function ImageDropZone({
   }
 
 
-  function handleRemoveFile() {
+  function performRemove() {
     if (inputRef.current) {
       inputRef.current.value = "";
     }
 
     onFileChange(null);
+  }
+
+
+  /*
+   * ถ้าการลบภาพจะทำให้ผลการทำนายหายไปด้วย
+   * (confirmRemoval) ให้ถามยืนยันก่อน — กันข้อมูลหาย
+   */
+  function handleRemoveFile() {
+    if (confirmRemoval) {
+      setIsRemoveConfirmOpen(true);
+      return;
+    }
+
+    performRemove();
+  }
+
+
+  function handleConfirmRemove() {
+    setIsRemoveConfirmOpen(false);
+    performRemove();
   }
 
 
@@ -222,10 +247,6 @@ function ImageDropZone({
           </div>
         ) : (
           <div className="drop-zone-file">
-            <div className="file-icon">
-              <Icon name="image" size={24} />
-            </div>
-
             <div className="file-information">
               <span className="file-ready-label">
                 <Icon name="check" size={13} />
@@ -257,6 +278,7 @@ function ImageDropZone({
                 onClick={handleBrowseClick}
                 disabled={disabled}
               >
+                <Icon name="refresh" size={15} />
                 Change
               </button>
 
@@ -265,9 +287,10 @@ function ImageDropZone({
                 className="remove-file-button"
                 onClick={handleRemoveFile}
                 disabled={disabled}
-                aria-label={`Remove ${selectedFile.name}`}
+                aria-label={`Remove ${selectedFile.name} and clear the result`}
+                title="Remove image and clear the result"
               >
-                <Icon name="trash" size={16} />
+                <Icon name="close" size={16} />
                 Remove
               </button>
             </div>
@@ -283,6 +306,18 @@ function ImageDropZone({
           {error}
         </small>
       )}
+
+      <ConfirmationDialog
+        open={isRemoveConfirmOpen}
+        title="Remove the uploaded image?"
+        message="This clears the current image and its prediction result. This cannot be undone."
+        confirmLabel="Remove image"
+        cancelLabel="Cancel"
+        onConfirm={handleConfirmRemove}
+        onClose={() => {
+          setIsRemoveConfirmOpen(false);
+        }}
+      />
     </div>
   );
 }

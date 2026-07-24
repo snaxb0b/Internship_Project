@@ -4,8 +4,14 @@ html {
 }
 
 .app-shell {
-  --content-width: 1360px;
-  --workflow-width: 1120px;
+  /*
+   * แผงขั้นตอน (main-content) ใช้ความกว้างเท่ากับ
+   * ส่วนหัว (content-width) จึงเรียงขอบตรงกัน และ
+   * กว้างเต็มพื้นที่มากขึ้น โดยจำกัดไม่ให้ยืดเกินไป
+   * บนจอใหญ่มาก (เพดาน 1600px) เว้นระยะขอบสองข้าง
+   */
+  --content-width: 1600px;
+  --workflow-width: 1600px;
   --page-gutter: 24px;
   --sticky-offset: 86px;
   --floating-dock-reserve: 96px;
@@ -30,7 +36,7 @@ html {
   position: sticky;
   z-index: 900;
   top: 0;
-  padding: 12px var(--page-gutter);
+  padding: 9px var(--page-gutter);
   border-bottom: 1px solid rgba(174, 210, 242, 0.82);
   background: var(--surface-glass);
   box-shadow: 0 9px 30px rgba(22, 83, 135, 0.08);
@@ -40,10 +46,10 @@ html {
 .app-toolbar-inner {
   display: flex;
   width: min(var(--content-width), 100%);
-  min-height: 46px;
+  min-height: 42px;
   align-items: center;
   justify-content: space-between;
-  gap: 16px;
+  gap: 14px;
   margin: 0 auto;
 }
 
@@ -98,14 +104,23 @@ html {
   box-shadow: 0 0 0 52px rgba(22, 119, 255, 0.025);
 }
 
-.menu-toggle {
+/* ---------- Workspace toolbar: left icon controls ---------- */
+.app-toolbar-left {
+  display: inline-flex;
+  min-width: 0;
+  align-items: center;
+  gap: 10px;
+}
+
+/* ปุ่มไอคอนในแถบหัว (Home + hamburger) — ขนาดเท่ากัน */
+.icon-toolbar-button {
   display: grid;
-  width: 46px;
-  height: 46px;
+  width: 42px;
+  height: 42px;
   flex-shrink: 0;
   place-items: center;
   border: 1px solid rgba(22, 119, 255, 0.24);
-  border-radius: 14px;
+  border-radius: 12px;
   background: linear-gradient(145deg, #ffffff, #e7f4ff);
   color: var(--blue);
   box-shadow: 0 8px 22px rgba(22, 119, 255, 0.12);
@@ -116,25 +131,30 @@ html {
     transform 0.2s ease;
 }
 
-.menu-toggle:hover {
+.icon-toolbar-button:hover {
   border-color: var(--blue);
   background: linear-gradient(145deg, #ffffff, #dceeff);
   box-shadow: 0 11px 26px rgba(22, 119, 255, 0.17);
   transform: translateY(-1px);
 }
 
+.icon-toolbar-button:active {
+  transform: translateY(0) scale(0.96);
+  box-shadow: 0 6px 16px rgba(22, 119, 255, 0.14);
+}
+
 .api-status {
   display: flex;
-  min-height: 42px;
+  min-height: 38px;
   align-items: center;
-  gap: 10px;
+  gap: 9px;
   flex-shrink: 0;
-  padding: 7px 9px 7px 13px;
+  padding: 6px 9px 6px 12px;
   border: 1px solid var(--line);
   border-radius: 999px;
   background: var(--surface-glass);
   color: var(--text);
-  font-size: 0.82rem;
+  font-size: 0.78rem;
   font-weight: 700;
   box-shadow: 0 8px 22px rgba(37, 103, 160, 0.07);
   backdrop-filter: blur(10px);
@@ -225,7 +245,7 @@ html {
   width: min(370px, calc(100% - 32px));
   flex-direction: column;
   overflow-y: auto;
-  padding: 22px;
+  padding: 18px;
   border-right: 1px solid rgba(175, 211, 243, 0.95);
   background:
     radial-gradient(
@@ -316,6 +336,65 @@ html {
   transform: rotate(3deg);
 }
 
+/* ---------- Menu drawer: heading + footer controls + red close ---------- */
+.drawer-menu-title {
+  margin: 4px 0 18px;
+  color: var(--navy);
+  font-size: 1.5rem;
+  font-weight: 850;
+  letter-spacing: -0.02em;
+  text-align: center;
+}
+
+.drawer-footer-controls {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-top: auto;
+  padding-top: 16px;
+}
+
+/* ปุ่มปิดสีแดงเต็มความกว้าง — ปิดเมนูเท่านั้น */
+.drawer-close-full {
+  display: flex;
+  width: 100%;
+  min-height: 48px;
+  align-items: center;
+  justify-content: center;
+  gap: 9px;
+  border: 1px solid #c2415a;
+  border-radius: 13px;
+  background: #c2415a;
+  color: #ffffff;
+  font-size: 0.86rem;
+  font-weight: 850;
+  box-shadow: 0 12px 26px rgba(194, 65, 90, 0.28);
+  transition:
+    background 0.2s ease,
+    box-shadow 0.2s ease,
+    transform 0.2s ease;
+}
+
+.drawer-close-full svg {
+  color: #ffffff;
+}
+
+.drawer-close-full:hover {
+  background: #a83450;
+  border-color: #a83450;
+  box-shadow: 0 16px 32px rgba(194, 65, 90, 0.34);
+  transform: translateY(-1px);
+}
+
+.drawer-close-full:active {
+  transform: translateY(0) scale(0.99);
+}
+
+.drawer-close-full:focus-visible {
+  outline: 3px solid rgba(194, 65, 90, 0.45);
+  outline-offset: 2px;
+}
+
 .drawer-copy {
   padding: 32px 4px 24px;
 }
@@ -351,13 +430,13 @@ html {
 .drawer-step {
   position: relative;
   display: grid;
-  grid-template-columns: 48px minmax(0, 1fr) 30px;
+  grid-template-columns: 44px minmax(0, 1fr) 28px;
   align-items: center;
-  gap: 12px;
-  min-height: 76px;
-  padding: 12px;
+  gap: 11px;
+  min-height: 68px;
+  padding: 11px;
   border: 1px solid var(--line);
-  border-radius: 16px;
+  border-radius: 14px;
   background: var(--surface-glass);
   color: var(--text);
   text-decoration: none;
@@ -407,10 +486,10 @@ html {
 .drawer-step-marker {
   position: relative;
   display: grid;
-  width: 48px;
-  height: 48px;
+  width: 44px;
+  height: 44px;
   place-items: center;
-  border-radius: 14px;
+  border-radius: 13px;
   background: var(--blue-soft);
   color: var(--blue);
 }
@@ -472,6 +551,103 @@ html {
   transform: translateX(2px);
 }
 
+/* ---------- Workspace utility menu (inside the drawer) ---------- */
+.drawer-utilities {
+  display: flex;
+  flex-direction: column;
+  gap: 11px;
+}
+
+.drawer-utility {
+  display: grid;
+  width: 100%;
+  grid-template-columns: 44px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 12px;
+  min-height: 66px;
+  padding: 12px 14px;
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  background: var(--surface-glass);
+  color: var(--text);
+  text-align: left;
+  text-decoration: none;
+  box-shadow: 0 7px 18px rgba(24, 89, 145, 0.04);
+  transition:
+    border-color 0.2s ease,
+    background 0.2s ease,
+    box-shadow 0.2s ease,
+    transform 0.2s ease;
+}
+
+.drawer-utility:hover {
+  border-color: var(--blue);
+  background: var(--surface);
+  box-shadow: 0 11px 24px rgba(22, 119, 255, 0.1);
+  transform: translateX(3px);
+}
+
+.drawer-utility:focus-visible {
+  border-color: var(--blue);
+  outline: 3px solid rgba(22, 119, 255, 0.28);
+  outline-offset: 2px;
+}
+
+.drawer-utility-icon {
+  display: grid;
+  width: 44px;
+  height: 44px;
+  place-items: center;
+  border-radius: 13px;
+  background: var(--blue-soft);
+  color: var(--blue);
+}
+
+.drawer-utility-brand,
+.drawer-utility-github {
+  width: 22px;
+  height: 22px;
+}
+
+.drawer-utility-github {
+  color: var(--navy);
+}
+
+.drawer-utility-copy {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.drawer-utility-copy strong {
+  color: var(--navy);
+  font-size: 0.86rem;
+}
+
+.drawer-utility-copy small {
+  overflow: hidden;
+  color: var(--muted);
+  font-size: 0.72rem;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.drawer-utility-state {
+  padding: 4px 10px;
+  border-radius: 999px;
+  background: var(--blue-soft);
+  color: var(--blue-dark);
+  font-size: 0.68rem;
+  font-weight: 850;
+}
+
+.drawer-utility:hover .drawer-step-arrow {
+  background: var(--blue-soft);
+  color: var(--blue);
+  transform: translateX(2px);
+}
+
 .drawer-footer {
   display: flex;
   align-items: flex-start;
@@ -491,7 +667,7 @@ html {
 
 .hero-content {
   width: min(920px, 100%);
-  margin: 52px auto 0;
+  margin: 0 auto;
   text-align: center;
   scroll-margin-top: var(--sticky-offset);
 }
@@ -513,12 +689,15 @@ html {
   -webkit-background-clip: text;
 }
 
+/* จังหวะระยะห่างระหว่างส่วนต่าง ๆ ของหน้า Landing
+   ใช้ค่าเดียวกันทั้งหมดเพื่อให้สม่ำเสมอ (รวมถึงเหนือปุ่ม
+   Get Started) — ปรับเฉพาะระยะห่าง ไม่ลดขนาดฟอนต์ */
 .header-description {
   max-width: 650px;
-  margin: 24px auto 0;
+  margin: clamp(16px, 2.6vh, 28px) auto 0;
   color: var(--muted);
   font-size: clamp(1rem, 2vw, 1.12rem);
-  line-height: 1.75;
+  line-height: 1.7;
 }
 
 .hero-highlights {
@@ -526,7 +705,7 @@ html {
   flex-wrap: wrap;
   justify-content: center;
   gap: 10px 24px;
-  margin-top: 26px;
+  margin-top: clamp(16px, 2.6vh, 28px);
 }
 
 .hero-highlights span {
@@ -546,8 +725,8 @@ html {
 }
 
 .hero-workflow-card {
-  margin-top: 26px;
-  padding: 18px;
+  margin-top: clamp(16px, 2.6vh, 28px);
+  padding: clamp(13px, 1.8vh, 16px);
   border: 1px solid rgba(180, 213, 242, 0.92);
   border-radius: 20px;
   background: var(--surface-glass);
@@ -624,6 +803,92 @@ html {
   line-height: 1.6;
 }
 
+/* ---------- Landing page (route "/") ---------- */
+/*
+ * จัดเนื้อหาแนะนำให้อยู่กึ่งกลางแนวตั้งของจอ เพื่อ
+ * ให้ดูสมดุลและไม่เหลือช่องว่างด้านล่างเยอะเกินไป
+ */
+/*
+ * บนหน้า Landing เอา padding-bottom (dock reserve) ของ
+ * .app-shell ออก เพื่อให้พื้นหลังเต็มจอพอดี ไม่เหลือ
+ * แถบด้านล่าง และเนื้อหาอยู่กึ่งกลางแนวตั้งของทั้งจอ
+ */
+.app-shell--landing {
+  padding-bottom: 0;
+}
+
+.landing-header {
+  display: flex;
+  min-height: 100svh;
+  align-items: center;
+  justify-content: center;
+  padding-top: clamp(24px, 5vh, 56px);
+  padding-bottom: clamp(24px, 5vh, 56px);
+  /* ไม่มีเส้นคั่น/ขอบล่าง */
+  border-bottom: 0;
+}
+
+.landing-cta {
+  display: flex;
+  justify-content: center;
+  margin-top: clamp(16px, 2.6vh, 28px);
+}
+
+.get-started-button {
+  display: inline-flex;
+  min-height: 56px;
+  align-items: center;
+  gap: 10px;
+  padding: 15px 36px;
+  border: 1px solid var(--blue);
+  border-radius: 15px;
+  background: linear-gradient(135deg, #2388ff, #0b63dd);
+  color: var(--on-accent);
+  font-size: 1.02rem;
+  font-weight: 850;
+  letter-spacing: 0.01em;
+  box-shadow: 0 16px 34px rgba(22, 119, 255, 0.3);
+  transition:
+    background 0.2s ease,
+    box-shadow 0.2s ease,
+    transform 0.2s ease;
+}
+
+.get-started-button svg {
+  transition: transform 0.2s ease;
+}
+
+.get-started-button:hover {
+  background: linear-gradient(135deg, #127aff, #0758c6);
+  box-shadow: 0 20px 40px rgba(22, 119, 255, 0.36);
+  transform: translateY(-2px);
+}
+
+.get-started-button:hover svg {
+  transform: translateX(4px);
+}
+
+.get-started-button:focus-visible {
+  outline: 3px solid rgba(22, 119, 255, 0.45);
+  outline-offset: 3px;
+}
+
+.get-started-button:active {
+  transform: translateY(0) scale(0.985);
+  box-shadow: 0 10px 24px rgba(22, 119, 255, 0.26);
+}
+
+/*
+ * Compact workspace (~90% ของเดิม) — ปรับเฉพาะหน้า
+ * Detection (.workspace-view) ไม่แตะหน้า Landing
+ * ย่อความกว้างคอนเทนต์ผ่านตัวแปรที่ scope ไว้ที่นี่
+ * (ทั้ง toolbar และ main-content ใช้ค่าเดียวกัน จึงเรียงตรงกัน)
+ */
+.workspace-view {
+  --content-width: 1440px;
+  --workflow-width: 1440px;
+}
+
 .main-content {
   display: flex;
   width: min(
@@ -631,18 +896,23 @@ html {
     calc(100% - var(--page-gutter) - var(--page-gutter))
   );
   flex-direction: column;
-  gap: 36px;
-  margin: 46px auto 0;
+  gap: 27px;
+  margin: 32px auto 0;
 }
 
 .workflow-output {
   display: flex;
   min-width: 0;
   flex-direction: column;
-  gap: 36px;
+  gap: 27px;
 }
 
-.upload-panel,
+/*
+ * เฉพาะ .config-column และ .workflow-output เป็น
+ * container — ไม่ตั้ง container-type ที่ .upload-panel
+ * (ซึ่งเป็น ancestor ของพรีวิว sticky) เพื่อกัน
+ * containment ไปรบกวน position: sticky ของพรีวิว
+ */
 .workflow-output {
   container-type: inline-size;
 }
@@ -650,9 +920,9 @@ html {
 .panel {
   position: relative;
   min-width: 0;
-  padding: 40px;
+  padding: 30px;
   border: 1px solid rgba(191, 218, 243, 0.9);
-  border-radius: 28px;
+  border-radius: 24px;
   background: var(--surface-glass);
   box-shadow:
     0 22px 60px rgba(24, 76, 122, 0.08),
@@ -663,9 +933,9 @@ html {
 .main-content .panel:not(:last-child)::after {
   position: absolute;
   width: 2px;
-  height: 36px;
-  bottom: -37px;
-  left: 65px;
+  height: 27px;
+  bottom: -28px;
+  left: 52px;
   background: repeating-linear-gradient(
     to bottom,
     #8dc6fa 0,
@@ -676,31 +946,56 @@ html {
   content: "";
 }
 
-@container (max-width: 600px) {
-  .upload-panel .confidence-options {
-    grid-template-columns: 1fr;
-  }
+/*
+ * Step 1 + Step 2 = เฟรมเดียวกัน
+ *
+ * ทั้งสองแผงมีแถบ accent ("tab") กลางขอบบนร่วมกัน
+ * ให้รู้สึกเป็นเวิร์กโฟลว์เดียว — ใช้ tab แบบ inset
+ * แทน overflow:hidden เพื่อไม่ให้ทับ sticky preview
+ * หรือตัดเมนู dropdown ที่ล้นออกนอกแผง
+ */
+.step-panel::before {
+  position: absolute;
+  top: 0;
+  left: 50%;
+  width: 132px;
+  max-width: calc(100% - 96px);
+  height: 4px;
+  transform: translateX(-50%);
+  border-radius: 0 0 6px 6px;
+  background: linear-gradient(90deg, #2890ff, #63b3ff);
+  content: "";
+}
 
-  .upload-panel .confidence-number-field {
-    max-width: 190px;
-  }
+/* Step 2 — เน้นให้เด่นชัดว่าเป็นพื้นที่ผลลัพธ์หลัก */
+.result-panel {
+  border-color: rgba(22, 119, 255, 0.34);
+  box-shadow:
+    0 28px 72px rgba(24, 76, 122, 0.13),
+    0 4px 14px rgba(24, 76, 122, 0.05);
+}
 
-  .upload-panel .drop-zone-file {
-    align-items: flex-start;
-    flex-wrap: wrap;
-  }
+.result-panel::before {
+  width: 168px;
+  height: 5px;
+  background: linear-gradient(90deg, #1677ff, #4cc38a);
+}
 
+@container (max-width: 430px) {
+  /* คอลัมน์แคบ: ให้ข้อมูลไฟล์เต็มบรรทัด แล้วปุ่ม
+     Change/Remove ตกลงไปเรียงกันด้านล่าง */
   .upload-panel .file-information {
-    width: calc(100% - 78px);
-    flex-basis: calc(100% - 78px);
+    flex-basis: 100%;
   }
 
   .upload-panel .file-actions {
     width: 100%;
-    justify-content: flex-end;
-    padding-left: 78px;
   }
 
+  .upload-panel .change-file-button,
+  .upload-panel .remove-file-button {
+    flex: 1;
+  }
 }
 
 @container (max-width: 740px) {
@@ -751,8 +1046,8 @@ html {
 .section-heading {
   display: flex;
   align-items: flex-start;
-  gap: 18px;
-  margin-bottom: 30px;
+  gap: 14px;
+  margin-bottom: 20px;
 }
 
 .section-heading-copy {
@@ -763,18 +1058,18 @@ html {
 
 .section-kicker {
   display: block;
-  margin-bottom: 5px;
+  margin-bottom: 4px;
   color: var(--blue);
-  font-size: 0.72rem;
+  font-size: 0.68rem;
   font-weight: 900;
   letter-spacing: 0.11em;
   text-transform: uppercase;
 }
 
 .section-heading h2 {
-  margin: 0 0 7px;
+  margin: 0 0 6px;
   color: var(--navy);
-  font-size: clamp(1.45rem, 3vw, 1.8rem);
+  font-size: clamp(1.32rem, 2.7vw, 1.62rem);
   letter-spacing: -0.03em;
   line-height: 1.2;
   overflow-wrap: anywhere;
@@ -784,18 +1079,18 @@ html {
   max-width: 650px;
   margin: 0;
   color: var(--muted);
-  font-size: 0.94rem;
+  font-size: 0.86rem;
   line-height: 1.6;
 }
 
 .step-number {
   display: grid;
-  width: 52px;
-  height: 52px;
+  width: 46px;
+  height: 46px;
   flex-shrink: 0;
   place-items: center;
   border: 1px solid rgba(255, 255, 255, 0.55);
-  border-radius: 16px;
+  border-radius: 14px;
   background: linear-gradient(145deg, #2890ff, #0b63dd);
   color: var(--on-accent);
   box-shadow:
@@ -806,22 +1101,51 @@ html {
 .prediction-form {
   display: flex;
   flex-direction: column;
-  gap: 18px;
+  gap: 14px;
+}
+
+/*
+ * Step 1 layout — แผงตั้งค่าอยู่ซ้าย พรีวิวภาพ
+ * ขนาดใหญ่อยู่ขวา (ดูกริดเดสก์ท็อปด้านล่าง)
+ *
+ * .config-column เป็น container เอง เพื่อให้ตัว
+ * ควบคุมภายใน (presets/number/drop-zone) ตอบสนอง
+ * ตามความกว้างของ "คอลัมน์" ไม่ใช่ทั้งแผง
+ */
+.config-layout {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.config-column {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  gap: 14px;
+  container-type: inline-size;
+}
+
+.preview-column {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
 }
 
 .control-block {
   width: 100%;
-  padding: 24px;
+  padding: 18px;
   border: 1px solid var(--line-soft);
-  border-radius: 20px;
+  border-radius: 16px;
   background: linear-gradient(160deg, #ffffff, #f9fcff);
 }
 
 .control-block-heading {
   display: flex;
   align-items: flex-start;
-  gap: 12px;
-  margin-bottom: 18px;
+  gap: 11px;
+  margin-bottom: 13px;
 }
 
 .control-block-heading > div {
@@ -833,25 +1157,25 @@ html {
 .control-label {
   display: block;
   color: var(--navy);
-  font-size: 0.96rem;
+  font-size: 0.9rem;
   font-weight: 800;
   line-height: 1.35;
 }
 
 .control-block-heading p {
-  margin: 4px 0 0;
+  margin: 3px 0 0;
   color: var(--muted);
-  font-size: 0.82rem;
+  font-size: 0.78rem;
   line-height: 1.45;
 }
 
 .control-icon {
   display: grid;
-  width: 38px;
-  height: 38px;
+  width: 34px;
+  height: 34px;
   flex-shrink: 0;
   place-items: center;
-  border-radius: 11px;
+  border-radius: 10px;
   background: var(--blue-soft);
   color: var(--blue-dark);
 }
@@ -865,10 +1189,10 @@ html {
 .form-field select,
 .confidence-number-field input {
   width: 100%;
-  min-height: 48px;
-  padding: 11px 14px;
+  min-height: 44px;
+  padding: 10px 13px;
   border: 1px solid var(--line);
-  border-radius: 12px;
+  border-radius: 11px;
   outline: none;
   background-color: var(--surface);
   color: var(--text);
@@ -1011,31 +1335,37 @@ html {
   font-weight: 650;
 }
 
-.confidence-options {
-  display: grid;
-  grid-template-columns: 1fr 190px;
-  align-items: end;
-  gap: 14px;
-  margin-top: 5px;
-}
-
 .confidence-presets {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 8px;
+  margin-top: 3px;
+}
+
+/*
+ * แถว "Custom value" + "SAHI mode" — เรียงเคียงกัน
+ * เมื่อมีที่พอ (เดสก์ท็อป) และเรียงซ้อนบนจอเล็ก
+ */
+.confidence-extras {
+  display: grid;
+  grid-template-columns: 1fr;
+  align-items: end;
+  gap: 12px;
+  margin-top: 3px;
+  max-width: 280px;
 }
 
 .confidence-preset {
   position: relative;
   display: grid;
-  min-height: 48px;
+  min-height: 44px;
   place-items: center;
-  padding: 8px 11px;
+  padding: 8px 10px;
   border: 1px solid var(--line);
-  border-radius: 11px;
+  border-radius: 10px;
   background: var(--surface);
   color: var(--text);
-  font-size: 0.86rem;
+  font-size: 0.82rem;
   font-weight: 850;
   transition:
     border-color 0.2s ease,
@@ -1065,6 +1395,11 @@ html {
   color: var(--blue-dark);
 }
 
+/*
+ * ป้ายดาว "แนะนำ" — ใช้ไอคอน SVG จัดกึ่งกลางด้วย
+ * grid place-items:center จึงอยู่กลางวงกลมพอดีทุก
+ * ขนาด/ระดับซูม (ไม่ต้องปรับ margin เอง)
+ */
 .confidence-recommendation-mark {
   position: absolute;
   z-index: 2;
@@ -1078,10 +1413,11 @@ html {
   border-radius: 50%;
   background: var(--blue);
   color: var(--on-accent);
-  font-size: 0.84rem;
-  font-weight: 900;
-  line-height: 1;
   box-shadow: 0 4px 10px rgba(22, 119, 255, 0.25);
+}
+
+.confidence-recommendation-mark svg {
+  display: block;
 }
 
 .confidence-recommendation-tooltip {
@@ -1135,10 +1471,105 @@ html {
   gap: 6px;
 }
 
-.confidence-number-field > label {
+.confidence-number-field > label,
+.sahi-field-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 18px;
   color: var(--muted);
   font-size: 0.72rem;
   font-weight: 750;
+}
+
+/* กล่อง SAHI mode (เคียงข้าง Custom value) */
+.sahi-field {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.sahi-toggle-control {
+  display: flex;
+  min-height: 44px;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 7px 11px;
+  border: 1px solid var(--line);
+  border-radius: 11px;
+  background: var(--surface);
+}
+
+/* ---------- Reusable info tooltip (hover + keyboard focus) ---------- */
+.info-tip {
+  position: relative;
+  display: inline-flex;
+}
+
+.info-tip-trigger {
+  display: grid;
+  width: 18px;
+  height: 18px;
+  place-items: center;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: var(--blue-soft);
+  color: var(--blue-dark);
+  cursor: help;
+  transition: background 0.18s ease, color 0.18s ease;
+}
+
+.info-tip-trigger:hover,
+.info-tip-trigger:focus-visible {
+  background: var(--blue);
+  color: var(--on-accent);
+}
+
+.info-tip-bubble {
+  position: absolute;
+  z-index: 30;
+  bottom: calc(100% + 10px);
+  left: 50%;
+  width: max-content;
+  max-width: min(240px, calc(100vw - 48px));
+  padding: 9px 11px;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  border-radius: 9px;
+  visibility: hidden;
+  background: var(--navy);
+  color: var(--on-accent);
+  font-size: 0.7rem;
+  font-weight: 650;
+  line-height: 1.45;
+  opacity: 0;
+  pointer-events: none;
+  text-align: left;
+  transform: translateX(-50%) translateY(4px);
+  transition:
+    opacity 0.18s ease,
+    transform 0.18s ease,
+    visibility 0.18s ease;
+}
+
+.info-tip-bubble::after {
+  position: absolute;
+  top: 100%;
+  left: 50%;
+  border-width: 6px 6px 0;
+  border-style: solid;
+  border-color: var(--navy) transparent transparent;
+  transform: translateX(-50%);
+  content: "";
+}
+
+.info-tip-trigger:hover + .info-tip-bubble,
+.info-tip-trigger:focus-visible + .info-tip-bubble {
+  visibility: visible;
+  opacity: 1;
+  transform: translateX(-50%) translateY(0);
 }
 
 .confidence-stepper {
@@ -1190,8 +1621,8 @@ html {
 }
 
 .confidence-number-field .confidence-stepper input {
-  min-height: 48px;
-  padding: 8px 5px;
+  min-height: 44px;
+  padding: 7px 5px;
   border: 0;
   border-radius: 0;
   box-shadow: none;
@@ -1234,9 +1665,9 @@ html {
 .drop-zone {
   position: relative;
   overflow: hidden;
-  min-height: 260px;
+  min-height: 234px;
   border: 2px dashed var(--line);
-  border-radius: 18px;
+  border-radius: 16px;
   outline: none;
   background:
     radial-gradient(circle at 50% 20%, rgba(81, 167, 247, 0.11), transparent 40%),
@@ -1278,8 +1709,9 @@ html {
   opacity: 0.58;
 }
 
+/* มีไฟล์แล้ว = การ์ดสูงเท่าเนื้อหา (ไม่เว้นช่องว่างล่าง) */
 .drop-zone--has-file {
-  min-height: 150px;
+  min-height: 0;
   border-style: solid;
   border-color: var(--line);
   background: var(--surface-soft);
@@ -1296,12 +1728,12 @@ html {
 
 .drop-zone-empty {
   display: flex;
-  min-height: 256px;
+  min-height: 230px;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 18px;
-  padding: 32px;
+  gap: 16px;
+  padding: 28px;
   text-align: center;
 }
 
@@ -1366,31 +1798,23 @@ html {
   box-shadow: 0 6px 16px rgba(22, 119, 255, 0.08);
 }
 
+/*
+ * การ์ดไฟล์ (ไม่มีไอคอนตกแต่งด้านซ้ายแล้ว):
+ * ข้อมูลไฟล์ทางซ้าย + ปุ่ม Change/Remove กะทัดรัด
+ * เคียงกันทางขวา — ตัดลงบรรทัดใหม่เมื่อจอแคบ
+ */
 .drop-zone-file {
   display: flex;
-  min-height: 146px;
+  flex-wrap: wrap;
   align-items: center;
-  gap: 18px;
-  padding: 24px;
-}
-
-.file-icon {
-  display: grid;
-  width: 60px;
-  height: 60px;
-  flex-shrink: 0;
-  place-items: center;
-  border: 1px solid var(--line);
-  border-radius: 16px;
-  background: linear-gradient(145deg, #ffffff, #e7f4ff);
-  color: var(--blue);
-  box-shadow: 0 8px 20px rgba(22, 119, 255, 0.09);
+  gap: 12px 16px;
+  padding: 16px 18px;
 }
 
 .file-information {
   display: flex;
   min-width: 0;
-  flex: 1;
+  flex: 1 1 190px;
   flex-direction: column;
   gap: 5px;
 }
@@ -1422,9 +1846,14 @@ html {
   font-size: 0.78rem;
 }
 
+/*
+ * ปุ่มจัดการไฟล์ = กลุ่มแนวนอนกะทัดรัด เคียงข้อมูลไฟล์
+ * (Remove ยังเป็นสไตล์แดงเพื่อสื่อว่าเป็นการลบ)
+ */
 .file-actions {
-  display: flex;
+  display: inline-flex;
   flex-shrink: 0;
+  align-items: center;
   gap: 8px;
 }
 
@@ -1435,11 +1864,15 @@ html {
   align-items: center;
   justify-content: center;
   gap: 6px;
-  padding: 8px 12px;
-  border-radius: 10px;
+  padding: 9px 14px;
+  border-radius: 11px;
   font-size: 0.8rem;
   font-weight: 800;
-  transition: background 0.2s ease, transform 0.2s ease;
+  transition:
+    border-color 0.2s ease,
+    background 0.2s ease,
+    box-shadow 0.2s ease,
+    transform 0.2s ease;
 }
 
 .change-file-button {
@@ -1449,39 +1882,89 @@ html {
 }
 
 .change-file-button:hover:not(:disabled) {
+  border-color: var(--blue);
   background: var(--blue-soft);
   transform: translateY(-1px);
 }
 
 .remove-file-button {
-  border: 1px solid var(--line);
-  background: var(--surface);
+  border: 1px solid var(--danger);
+  background: var(--danger-soft);
+  color: var(--danger);
+}
+
+.remove-file-button svg {
   color: var(--danger);
 }
 
 .remove-file-button:hover:not(:disabled) {
-  background: var(--danger-soft);
+  background: var(--danger);
+  color: var(--on-accent);
+  box-shadow: 0 10px 24px rgba(194, 65, 90, 0.28);
   transform: translateY(-1px);
 }
 
+.remove-file-button:hover:not(:disabled) svg {
+  color: var(--on-accent);
+}
+
+.remove-file-button:active:not(:disabled) {
+  transform: translateY(0) scale(0.99);
+}
+
+.remove-file-button:focus-visible {
+  outline: 3px solid rgba(194, 65, 90, 0.4);
+  outline-offset: 2px;
+}
+
+/*
+ * จอเล็ก: ข้อมูลไฟล์เต็มบรรทัด แล้ว Change/Remove
+ * ตกลงไปเรียงกันด้านล่างแบบเต็มความกว้าง
+ */
+@media (max-width: 620px) {
+  .file-information {
+    flex-basis: 100%;
+  }
+
+  .file-actions {
+    width: 100%;
+  }
+
+  .change-file-button,
+  .remove-file-button {
+    flex: 1;
+  }
+}
+
+/*
+ * การ์ดพรีวิวจะสูงเท่าเนื้อหา (หัว + ภาพ) ไม่ยืด
+ * เต็มคอลัมน์ กรอบจึงแนบชิดภาพจริง ไม่เหลือช่องว่าง
+ * แนวตั้งใหญ่ ๆ — จัดกึ่งกลางในคอลัมน์ด้วย
+ * .preview-column { justify-content:center }
+ */
 .image-preview {
+  display: flex;
+  width: 100%;
+  max-width: 100%;
   overflow: hidden;
-  margin-top: 16px;
+  flex-direction: column;
   border: 1px solid var(--line);
-  border-radius: 16px;
+  border-radius: 18px;
   background: var(--surface);
 }
 
 .image-preview-header {
   display: flex;
-  min-height: 52px;
+  min-height: 46px;
+  flex-shrink: 0;
   align-items: center;
   justify-content: space-between;
-  gap: 14px;
-  padding: 10px 14px;
+  gap: 12px;
+  padding: 9px 13px;
   border-bottom: 1px solid var(--line-soft);
 }
 
+.image-preview-title,
 .image-preview-header > span:first-child {
   display: inline-flex;
   align-items: center;
@@ -1513,10 +1996,10 @@ html {
 
 .image-preview-canvas {
   display: grid;
-  min-height: 260px;
-  max-height: 560px;
+  min-height: 200px;
   place-items: center;
   overflow: hidden;
+  padding: 12px;
   background:
     linear-gradient(45deg, #eef4f9 25%, transparent 25%),
     linear-gradient(-45deg, #eef4f9 25%, transparent 25%),
@@ -1527,10 +2010,76 @@ html {
   background-size: 20px 20px;
 }
 
+/*
+ * ใช้ max-width/max-height (ไม่ใช่ width:100%) เพื่อ
+ * ไม่ยืดภาพเล็กให้เบลอ — คงความละเอียด/สีต้นฉบับไว้
+ * canvas สูงเท่าภาพ (ไม่มี flex:1) กรอบจึงแนบภาพ
+ */
 .image-preview-canvas img {
-  width: 100%;
-  max-height: 560px;
+  max-width: 100%;
+  max-height: min(68vh, 720px);
+  width: auto;
+  height: auto;
+  border-radius: 8px;
   object-fit: contain;
+}
+
+/* พื้นที่พรีวิวว่าง (ยังไม่ได้อัปโหลดภาพ) */
+.image-preview-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  padding: 34px 26px;
+  color: var(--muted);
+  text-align: center;
+}
+
+.image-preview-empty-visual {
+  position: relative;
+  display: grid;
+  width: 96px;
+  height: 74px;
+  place-items: center;
+}
+
+.image-preview-empty-ring {
+  position: absolute;
+  width: 88px;
+  height: 46px;
+  bottom: 2px;
+  border: 1px solid rgba(22, 119, 255, 0.16);
+  border-radius: 50%;
+  background: rgba(22, 119, 255, 0.03);
+}
+
+.image-preview-empty-icon {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  width: 62px;
+  height: 62px;
+  place-items: center;
+  border: 1px solid var(--line);
+  border-radius: 18px;
+  background: linear-gradient(145deg, #ffffff, #e6f4ff);
+  color: var(--blue);
+  box-shadow: 0 13px 28px rgba(22, 119, 255, 0.15);
+}
+
+.image-preview-empty-copy strong {
+  display: block;
+  margin-bottom: 6px;
+  color: var(--navy);
+  font-size: 1rem;
+}
+
+.image-preview-empty-copy p {
+  max-width: 320px;
+  margin: 0 auto;
+  font-size: 0.83rem;
+  line-height: 1.55;
 }
 
 .error-message {
@@ -1596,10 +2145,10 @@ html {
   align-items: center;
   justify-content: center;
   gap: 24px;
-  margin-top: 4px;
-  padding: 20px 22px;
+  margin-top: 2px;
+  padding: 15px 18px;
   border: 1px solid var(--line);
-  border-radius: 18px;
+  border-radius: 16px;
   background: linear-gradient(110deg, #f1f8ff, #fbfdff);
 }
 
@@ -1622,13 +2171,13 @@ html {
 .predict-button,
 .reset-button {
   display: inline-flex;
-  min-height: 48px;
+  min-height: 44px;
   align-items: center;
   justify-content: center;
   gap: 9px;
-  padding: 11px 17px;
-  border-radius: 12px;
-  font-size: 0.84rem;
+  padding: 10px 16px;
+  border-radius: 11px;
+  font-size: 0.8rem;
   font-weight: 850;
   transition:
     border-color 0.2s ease,
@@ -1823,73 +2372,95 @@ html {
 .prediction-content {
   display: flex;
   flex-direction: column;
-  gap: 24px;
+  gap: 20px;
 }
 
-.summary-grid {
+/*
+ * metadata แบบกะทัดรัด (Model / Objects / Device / Size)
+ * เป็นแถวป้ายเล็ก ๆ รองจากภาพผลลัพธ์ — ไม่เด่นเกินภาพ
+ */
+/*
+ * metadata (Model / Objects / Device / Size) — กระจาย
+ * เท่า ๆ กันเต็มความกว้าง (grid 4 คอลัมน์) อ่านสบาย
+ * แต่ยังรองจากภาพผลลัพธ์ ; จอเล็กลดเป็น 2 แล้ว 1 คอลัมน์
+ */
+.summary-meta {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: 10px;
+  gap: 9px;
+  padding: 10px;
+  border: 1px solid var(--line);
+  border-radius: 13px;
+  background: var(--surface-soft);
 }
 
-.summary-card {
-  display: flex;
+.summary-meta-item {
+  display: inline-flex;
   min-width: 0;
   align-items: center;
-  gap: 11px;
-  padding: 14px;
-  border: 1px solid var(--line);
-  border-radius: 14px;
-  background: linear-gradient(145deg, #fbfdff, #f0f8ff);
-}
-
-.summary-icon {
-  display: grid;
-  width: 38px;
-  height: 38px;
-  flex-shrink: 0;
-  place-items: center;
+  justify-content: center;
+  gap: 7px;
+  padding: 8px 12px;
+  border: 1px solid var(--line-soft);
   border-radius: 11px;
   background: var(--surface);
+}
+
+.summary-meta-item svg {
+  flex-shrink: 0;
   color: var(--blue);
-  box-shadow: 0 5px 14px rgba(22, 119, 255, 0.08);
 }
 
-.summary-card > div {
-  min-width: 0;
-}
-
-.summary-card > div > span {
-  display: block;
-  margin-bottom: 3px;
+.summary-meta-label {
+  flex-shrink: 0;
   color: var(--muted);
-  font-size: 0.69rem;
+  font-size: 0.74rem;
   font-weight: 700;
 }
 
-.summary-card strong {
-  display: block;
+.summary-meta-item strong {
   overflow: hidden;
   color: var(--navy);
-  font-size: 0.9rem;
+  font-size: 0.84rem;
+  font-weight: 800;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 
+@media (max-width: 760px) {
+  .summary-meta {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 420px) {
+  .summary-meta {
+    grid-template-columns: 1fr;
+  }
+}
+
+/*
+ * ภาพผลลัพธ์ = จุดโฟกัสหลัก: กรอบเด่นขึ้นเล็กน้อย +
+ * scroll-margin เผื่อ sticky header ตอน auto-scroll
+ */
 .result-image {
   overflow: hidden;
   border: 1px solid var(--line);
-  border-radius: 18px;
+  border-radius: 20px;
   background: var(--surface);
+  box-shadow:
+    0 22px 50px rgba(24, 76, 122, 0.1),
+    0 4px 12px rgba(24, 76, 122, 0.05);
+  scroll-margin-top: calc(var(--sticky-offset) + 10px);
 }
 
 .result-image-header {
   display: flex;
-  min-height: 68px;
+  min-height: 60px;
   align-items: center;
   justify-content: space-between;
-  gap: 18px;
-  padding: 12px 16px;
+  gap: 16px;
+  padding: 10px 14px;
   border-bottom: 1px solid var(--line-soft);
 }
 
@@ -1966,18 +2537,23 @@ html {
   background: var(--blue-soft);
 }
 
+/*
+ * กรอบผลลัพธ์สูงเท่าภาพจริง (min-height เป็นเพียง
+ * พื้นขั้นต่ำกันเลย์เอาต์กระตุกตอนโหลด) ภาพใหญ่จะ
+ * ย่อลงพอดี ไม่ล้น — กรอบจึงแนบภาพ ไม่เหลือ letterbox
+ */
 .result-image-canvas {
   display: grid;
-  min-height: 300px;
-  max-height: 720px;
+  min-height: 220px;
+  max-height: min(80vh, 860px);
   place-items: center;
   overflow: auto;
-  padding: 14px;
+  padding: 12px;
   background: var(--surface-soft);
 }
 
 .result-image-canvas img {
-  max-height: 690px;
+  max-height: min(76vh, 800px);
   border-radius: 10px;
   object-fit: contain;
   box-shadow: 0 8px 22px rgba(21, 55, 84, 0.12);
@@ -2002,7 +2578,7 @@ html {
   width: auto;
   height: auto;
   max-width: 100%;
-  max-height: 690px;
+  max-height: min(76vh, 800px);
   opacity: 0;
   transition: opacity 0.3s ease;
 }
@@ -2040,51 +2616,167 @@ html {
   text-overflow: ellipsis;
 }
 
+/* ---------- Detected objects: collapsible panel ---------- */
 .detections-section {
-  padding-top: 2px;
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  background: var(--surface);
 }
 
-.detections-heading {
+/*
+ * ไม่ใช้ overflow:hidden ที่ตัวกล่อง (จะตัดเมนู
+ * dropdown ที่ล้นลงมา) จึงมนมุมที่ตัวปุ่มโดยตรง
+ */
+.detections-toggle {
   display: flex;
-  align-items: flex-end;
-  justify-content: space-between;
-  gap: 16px;
-  margin-bottom: 14px;
-}
-
-.detections-heading-copy {
+  width: 100%;
   min-width: 0;
+  align-items: center;
+  gap: 14px;
+  padding: 14px 16px;
+  border: 0;
+  border-radius: 15px;
+  background: var(--surface-soft);
+  text-align: left;
+  transition: background 0.18s ease;
 }
 
-.detections-heading h3 {
-  margin: 0;
+.detections-toggle:hover {
+  background: var(--blue-soft);
+}
+
+.detections-toggle[aria-expanded="true"] {
+  border-radius: 15px 15px 0 0;
+  border-bottom: 1px solid var(--line-soft);
+}
+
+.detections-toggle-caret {
+  display: grid;
+  width: 30px;
+  height: 30px;
+  flex-shrink: 0;
+  place-items: center;
+  border-radius: 9px;
+  background: var(--surface);
+  color: var(--blue);
+  box-shadow: inset 0 0 0 1px var(--line-soft);
+  transition: transform 0.2s ease, color 0.18s ease;
+}
+
+.detections-toggle[aria-expanded="true"] .detections-toggle-caret {
+  transform: rotate(180deg);
+}
+
+.detections-toggle-text {
+  display: flex;
+  min-width: 0;
+  flex: 1;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.detections-toggle-title {
   color: var(--navy);
-  font-size: 1.05rem;
+  font-size: 0.94rem;
+  font-weight: 800;
   letter-spacing: -0.015em;
 }
 
-.detections-heading p {
-  margin: 4px 0 0;
+.detections-toggle-sub {
   color: var(--muted);
-  font-size: 0.77rem;
-}
-
-.detections-heading-tools {
-  display: flex;
-  flex-shrink: 0;
-  align-items: center;
-  gap: 10px;
+  font-size: 0.73rem;
+  line-height: 1.4;
 }
 
 .detections-count {
   flex-shrink: 0;
-  padding: 5px 9px;
+  padding: 5px 10px;
   border-radius: 999px;
   background: var(--blue-soft);
   color: var(--blue-dark);
-  font-size: 0.72rem;
-  font-weight: 800;
+  font-size: 0.74rem;
+  font-weight: 850;
   white-space: nowrap;
+}
+
+.detections-body {
+  display: flex;
+  flex-direction: column;
+  gap: 13px;
+  padding: 14px 16px 16px;
+}
+
+.detections-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.detections-toolbar-hint {
+  min-width: 0;
+  color: var(--muted);
+  font-size: 0.78rem;
+  line-height: 1.45;
+}
+
+/* ---------- Load more control ---------- */
+.detections-load-more {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  padding-top: 4px;
+}
+
+.load-more-button {
+  display: inline-flex;
+  min-height: 44px;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 18px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: var(--surface);
+  color: var(--blue-dark);
+  font-size: 0.82rem;
+  font-weight: 800;
+  transition:
+    border-color 0.2s ease,
+    background 0.2s ease,
+    box-shadow 0.2s ease,
+    transform 0.2s ease,
+    opacity 0.2s ease;
+}
+
+.load-more-button:hover:not(:disabled) {
+  border-color: var(--blue);
+  background: var(--blue-soft);
+  box-shadow: 0 6px 16px rgba(22, 119, 255, 0.12);
+  transform: translateY(-1px);
+}
+
+.load-more-button:disabled {
+  cursor: not-allowed;
+  opacity: 0.45;
+}
+
+.load-more-count {
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: var(--blue-soft);
+  color: var(--blue-dark);
+  font-size: 0.7rem;
+  font-weight: 850;
+}
+
+.load-more-button:hover .load-more-count {
+  background: var(--surface);
+}
+
+.load-more-button--less {
+  color: var(--muted);
 }
 
 /* ---------- Class filter dropdown ---------- */
@@ -2350,12 +3042,12 @@ html {
 table {
   width: 100%;
   border-collapse: collapse;
-  font-size: 0.82rem;
+  font-size: 0.78rem;
 }
 
 th,
 td {
-  padding: 13px 14px;
+  padding: 11px 12px;
   border-bottom: 1px solid var(--line-soft);
   text-align: left;
   vertical-align: middle;
@@ -3394,46 +4086,64 @@ tbody tr:last-child td {
   transform: translateY(-1px);
 }
 
-@media (min-width: 1024px) {
-  .upload-panel .prediction-form {
+@media (min-width: 960px) {
+  /*
+   * เดสก์ท็อป: แผงตั้งค่า (ซ้าย) + พรีวิวภาพ (ขวา)
+   * พรีวิวกินพื้นที่มากกว่าอย่างชัดเจนจึงเป็นจุดโฟกัส
+   */
+  .config-layout {
     display: grid;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
+    grid-template-columns: minmax(340px, 440px) minmax(0, 1fr);
     align-items: stretch;
-    gap: 18px;
+    gap: 20px;
   }
 
-  .upload-panel .model-control-block {
-    grid-column: 1;
-    grid-row: 1;
+  /*
+   * คอลัมน์พรีวิวยืดสูงเท่าคอลัมน์ตั้งค่า (grid stretch)
+   * มีภาพแล้ว → การ์ดสูงเท่าภาพจริง จัดกึ่งกลางแนวตั้ง
+   * (กรอบแนบภาพ ไม่ letterbox) ; ยังว่าง → ยืดเต็ม
+   * คอลัมน์เพื่อไม่ให้ placeholder ดูลอยเล็กเกินไป
+   */
+  .preview-column .image-preview-canvas img {
+    max-height: min(74vh, 780px);
   }
 
-  .upload-panel .confidence-control-block {
-    grid-column: 1;
-    grid-row: 2;
+  .preview-column .image-preview.is-empty {
+    height: 100%;
   }
 
-  .upload-panel .upload-control-block {
-    display: flex;
-    grid-column: 2;
-    grid-row: 1 / span 2;
-    flex-direction: column;
-  }
-
-  .upload-panel .upload-control-block .drop-zone-wrapper {
-    display: flex;
-    min-height: 0;
+  .preview-column .image-preview.is-empty .image-preview-canvas {
     flex: 1;
-    flex-direction: column;
   }
 
-  .upload-panel .upload-control-block .drop-zone,
-  .upload-panel .upload-control-block .drop-zone-empty {
-    min-height: 100%;
+  /*
+   * มีภาพแล้ว → พรีวิว sticky เกาะมุมบนขวาระหว่าง
+   * เลื่อนดูการตั้งค่า และปล่อยเองเมื่อสุด Step 1
+   * (containing block = .preview-column ซึ่งสูงเท่า
+   * config-layout จึงไม่มีทางเลื่อนไปทับ Step 2)
+   */
+  .preview-column .image-preview.has-image {
+    position: sticky;
+    top: calc(var(--sticky-offset) + 16px);
+    align-self: start;
   }
 
-  .upload-panel .prediction-form > .error-message,
-  .upload-panel .form-actions {
-    grid-column: 1 / -1;
+  /* Custom value + SAHI mode เรียงเคียงกันบนเดสก์ท็อป */
+  .config-column .confidence-extras {
+    grid-template-columns: 1fr 1fr;
+    max-width: none;
+  }
+
+  /* Drop zone ว่างในคอลัมน์ที่แคบลง — กะทัดรัดขึ้น
+     (การ์ดที่มีไฟล์แล้วสูงเท่าเนื้อหา) */
+  .config-column .drop-zone:not(.drop-zone--has-file) {
+    min-height: 166px;
+  }
+
+  .config-column .drop-zone-empty {
+    min-height: 162px;
+    gap: 14px;
+    padding: 22px;
   }
 }
 
@@ -3568,7 +4278,11 @@ tbody tr:last-child td {
   }
 
   .app-toolbar-inner {
-    gap: 12px;
+    gap: 10px;
+  }
+
+  .app-toolbar-left {
+    gap: 8px;
   }
 
   .app-header {
@@ -3576,7 +4290,7 @@ tbody tr:last-child td {
   }
 
   .api-status {
-    max-width: 178px;
+    max-width: 148px;
   }
 
   .api-status-content > span:last-of-type {
@@ -3784,14 +4498,10 @@ tbody tr:last-child td {
     padding: 8px;
   }
 
-  .detections-heading {
+  .detections-toolbar {
     flex-direction: column;
     align-items: stretch;
-    gap: 12px;
-  }
-
-  .detections-heading-tools {
-    justify-content: space-between;
+    gap: 10px;
   }
 
   .class-filter,
@@ -4368,6 +5078,19 @@ tbody tr:last-child td {
       0 3px 10px rgba(0, 0, 0, 0.35);
   }
 
+[data-theme="dark"] .result-panel {
+    border-color: rgba(79, 157, 255, 0.42);
+    box-shadow:
+      0 28px 72px rgba(0, 0, 0, 0.58),
+      0 4px 14px rgba(0, 0, 0, 0.42);
+  }
+
+[data-theme="dark"] .result-image {
+    box-shadow:
+      0 22px 50px rgba(0, 0, 0, 0.5),
+      0 4px 12px rgba(0, 0, 0, 0.4);
+  }
+
 [data-theme="dark"] .main-content .panel:not(:last-child)::after {
     background: repeating-linear-gradient(
       to bottom,
@@ -4393,12 +5116,12 @@ tbody tr:last-child td {
   }
 
 [data-theme="dark"] /* Light gradients -> dark equivalents */
-  .menu-toggle {
+  .icon-toolbar-button {
     background: linear-gradient(145deg, #1b2842, #141f37);
     box-shadow: 0 8px 22px rgba(0, 0, 0, 0.4);
   }
 
-[data-theme="dark"] .menu-toggle:hover {
+[data-theme="dark"] .icon-toolbar-button:hover {
     background: linear-gradient(145deg, #223154, #182644);
   }
 
@@ -4415,6 +5138,7 @@ tbody tr:last-child td {
 [data-theme="dark"] .file-icon,
 [data-theme="dark"] .drop-zone-icon,
 [data-theme="dark"] .empty-icon,
+[data-theme="dark"] .image-preview-empty-icon,
 [data-theme="dark"] .yolo-bar-icon,
 [data-theme="dark"] .summary-icon,
 [data-theme="dark"] .about-dialog-brand {
@@ -4604,41 +5328,12 @@ tbody tr:last-child td {
   color: var(--blue);
 }
 
-/* ---------- SAHI toggle (Step 1) ---------- */
-.upload-panel .section-heading {
-  flex-wrap: wrap;
-}
-
-.sahi-toggle {
-  display: flex;
-  flex-shrink: 0;
-  align-items: center;
-  gap: 12px;
-  margin-left: auto;
-  padding: 9px 12px;
-  border: 1px solid var(--line);
-  border-radius: 14px;
-  background: var(--surface-soft);
-}
-
-.sahi-toggle-text {
-  display: flex;
-  flex-direction: column;
-  gap: 1px;
-  line-height: 1.2;
-}
-
-.sahi-toggle-title {
-  color: var(--navy);
-  font-size: 0.82rem;
-  font-weight: 800;
-}
-
+/* ---------- SAHI toggle (Step 1, beside Custom value) ---------- */
 .sahi-toggle-state {
   color: var(--muted);
   font-size: 0.68rem;
-  font-weight: 750;
-  letter-spacing: 0.03em;
+  font-weight: 800;
+  letter-spacing: 0.04em;
   text-transform: uppercase;
 }
 
@@ -4700,15 +5395,25 @@ tbody tr:last-child td {
   opacity: 0.55;
 }
 
-@media (max-width: 620px) {
-  .sahi-toggle {
-    width: 100%;
-    margin-left: 0;
-    justify-content: space-between;
-  }
+/* ---------- Dark: readability refinements ---------- */
+/*
+ * Tooltip ของพรีเซ็ต 25% ใช้ background: var(--navy)
+ * ซึ่งใน dark mode พลิกเป็นสีสว่าง → ตัวอักษรขาว
+ * จมหายไปกับกล่อง จึงกำหนดพื้นเข้ม+ตัวอักษรสว่าง
+ * เฉพาะ dark mode (light mode คงเดิม)
+ */
+[data-theme="dark"] .confidence-recommendation-tooltip,
+[data-theme="dark"] .info-tip-bubble {
+  border-color: rgba(255, 255, 255, 0.16);
+  background: #0f1b33;
+  color: #eaf2ff;
 }
 
-/* ---------- Dark: readability refinements ---------- */
+[data-theme="dark"] .confidence-recommendation-tooltip::after,
+[data-theme="dark"] .info-tip-bubble::after {
+  border-top-color: #0f1b33;
+}
+
 [data-theme="dark"] .confidence-meter > .confidence-segment--active {
   background: linear-gradient(90deg, #7cc0ff, #4f9dff);
 }
@@ -4719,4 +5424,267 @@ tbody tr:last-child td {
 
 [data-theme="dark"] .confidence-preset[aria-pressed="true"] {
   color: var(--blue-deep);
+}
+
+/* =========================================================
+   Workspace typography
+   Scope every typography refinement to page 2 so the landing
+   page keeps its original type scale and capitalization.
+   ========================================================= */
+.workspace-view {
+  --workspace-text-caption: 0.75rem;
+  --workspace-text-small: 0.8125rem;
+  --workspace-text-body: 0.875rem;
+  --workspace-text-label: 0.9375rem;
+}
+
+/* Toolbar and workspace drawer */
+.workspace-view .api-status,
+.workspace-view .status-retry-button {
+  font-size: var(--workspace-text-small);
+}
+
+.workspace-view .drawer-step-marker small {
+  font-size: 0.6875rem;
+}
+
+.workspace-view .drawer-step-copy strong,
+.workspace-view .drawer-utility-copy strong,
+.workspace-view .drawer-close-full {
+  font-size: var(--workspace-text-body);
+}
+
+.workspace-view .drawer-step-copy small,
+.workspace-view .drawer-utility-copy small,
+.workspace-view .drawer-utility-state {
+  font-size: var(--workspace-text-caption);
+}
+
+/* Step headings and configuration controls */
+.workspace-view .section-kicker {
+  font-size: 1rem;
+}
+
+.workspace-view .section-heading p {
+  font-size: var(--workspace-text-body);
+}
+
+.workspace-view .control-block-heading label,
+.workspace-view .control-label {
+  font-size: var(--workspace-text-label);
+}
+
+.workspace-view .control-block-heading p,
+.workspace-view .model-description {
+  font-size: var(--workspace-text-small);
+}
+
+.workspace-view .confidence-output,
+.workspace-view .confidence-preset {
+  font-size: var(--workspace-text-body);
+}
+
+.workspace-view .range-scale,
+.workspace-view .confidence-number-field > label,
+.workspace-view .sahi-field-label,
+.workspace-view .sahi-toggle-state,
+.workspace-view .confidence-recommendation-tooltip,
+.workspace-view .info-tip-bubble {
+  font-size: var(--workspace-text-caption);
+}
+
+.workspace-view .sahi-toggle-state {
+  letter-spacing: 0;
+}
+
+/* Upload, preview, errors and primary actions */
+.workspace-view .drop-zone-copy p,
+.workspace-view .file-meta,
+.workspace-view .error-retry-button {
+  font-size: var(--workspace-text-small);
+}
+
+.workspace-view .browse-button,
+.workspace-view .change-file-button,
+.workspace-view .remove-file-button,
+.workspace-view .predict-button,
+.workspace-view .reset-button,
+.workspace-view .error-content,
+.workspace-view .image-preview-title,
+.workspace-view .image-preview-header > span:first-child,
+.workspace-view .image-preview-empty-copy p {
+  font-size: var(--workspace-text-body);
+}
+
+.workspace-view .file-ready-label,
+.workspace-view .preview-ready-badge {
+  font-size: var(--workspace-text-caption);
+}
+
+/* Result summary, annotated image and detected-object controls */
+.workspace-view .result-count-badge,
+.workspace-view .summary-meta-label,
+.workspace-view .result-image-header > div:first-child > div > span,
+.workspace-view .image-action-link {
+  font-size: var(--workspace-text-small);
+}
+
+.workspace-view .summary-meta-item strong {
+  font-size: var(--workspace-text-body);
+}
+
+.workspace-view .result-image-header strong {
+  font-size: var(--workspace-text-label);
+}
+
+.workspace-view .detection-box-label {
+  font-size: var(--workspace-text-caption);
+}
+
+.workspace-view .detections-toggle-title {
+  font-size: 1rem;
+}
+
+.workspace-view .detections-toggle-sub,
+.workspace-view .detections-count,
+.workspace-view .detections-toolbar-hint,
+.workspace-view .class-filter-toggle-value,
+.workspace-view .class-filter-option-name,
+.workspace-view table,
+.workspace-view .confidence-cell > strong {
+  font-size: var(--workspace-text-small);
+}
+
+.workspace-view .load-more-button,
+.workspace-view .clear-detection-filter {
+  font-size: var(--workspace-text-body);
+}
+
+.workspace-view .load-more-count,
+.workspace-view .class-filter-toggle-label,
+.workspace-view .class-filter-option-count,
+.workspace-view th,
+.workspace-view .detection-index,
+.workspace-view .bounding-point small,
+.workspace-view .bounding-point strong,
+.workspace-view .axis-label {
+  font-size: var(--workspace-text-caption);
+}
+
+.workspace-view .no-detections strong {
+  font-size: var(--workspace-text-body);
+}
+
+.workspace-view .no-detections p {
+  font-size: var(--workspace-text-small);
+  line-height: 1.5;
+}
+
+/* Prediction history */
+.workspace-view .history-count,
+.workspace-view .clear-history-button,
+.workspace-view .empty-history p,
+.workspace-view .history-view-button,
+.workspace-view .history-remove-button {
+  font-size: var(--workspace-text-small);
+}
+
+.workspace-view .empty-history strong,
+.workspace-view .history-filename {
+  font-size: var(--workspace-text-label);
+}
+
+.workspace-view .viewing-label,
+.workspace-view .history-title-row time,
+.workspace-view .history-meta > span {
+  font-size: var(--workspace-text-caption);
+}
+
+/* Use sentence case throughout page 2; keep acronyms as authored. */
+.workspace-view .section-kicker,
+.workspace-view .file-ready-label,
+.workspace-view .sahi-toggle-state,
+.workspace-view .class-filter-toggle-label,
+.workspace-view th,
+.workspace-view .bounding-point small,
+.workspace-view .detection-sort-mobile-label,
+.workspace-view .detection-sort-mobile .sort-control,
+.workspace-view tbody td::before {
+  letter-spacing: 0;
+  text-transform: none;
+}
+
+@media (max-width: 620px) {
+  .workspace-view .detection-sort-mobile-label,
+  .workspace-view .detection-sort-mobile .sort-control,
+  .workspace-view tbody td::before {
+    font-size: var(--workspace-text-caption);
+  }
+}
+
+/* ---------- Workspace icon alignment ---------- */
+.workspace-view svg {
+  display: block;
+  flex-shrink: 0;
+}
+
+.workspace-view .section-heading,
+.workspace-view .control-block-heading {
+  align-items: center;
+}
+
+.workspace-view .section-heading-copy {
+  padding-top: 0;
+}
+
+.workspace-view .no-detections {
+  align-items: center;
+}
+
+/* ---------- Workspace text alignment ---------- */
+.workspace-view .section-heading {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: center;
+}
+
+.workspace-view .section-heading-copy {
+  display: grid;
+  min-width: 0;
+  align-content: center;
+  justify-items: start;
+}
+
+.workspace-view .section-kicker,
+.workspace-view .section-heading h2,
+.workspace-view .section-heading p {
+  width: 100%;
+  text-align: left;
+}
+
+.workspace-view .control-block-heading {
+  display: grid;
+  grid-template-columns: 34px minmax(0, 1fr);
+  align-items: center;
+}
+
+.workspace-view
+  .confidence-control-block
+  .control-block-heading {
+  grid-template-columns: 34px minmax(0, 1fr) auto;
+}
+
+.workspace-view .control-block-heading > div {
+  width: 100%;
+  text-align: left;
+}
+
+.workspace-view .confidence-output {
+  align-self: center;
+}
+
+.workspace-view button,
+.workspace-view .browse-button,
+.workspace-view .image-action-link {
+  line-height: 1.2;
 }
